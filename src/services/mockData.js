@@ -16,32 +16,6 @@ export const colorList = [
   '#CB8D63', '#7ABB74', '#FED463', '#59CBD3', '#FEA66D', 
   '#6BC97D', '#54CEBE', '#8FC6FE'
 ]
-
-// 今日数据
-export const getTodayData = async () => {
-  try {
-    const response = await fetch("http://localhost:8080/today/ten")
-    if (!response.ok) {
-      throw new Error("网络请求失败")
-    }
-    const data = await response.json()
-
-    // 只取需要的字段
-    return {
-      studentEngagementRate: data.studentEngagementRate || 0,
-      studentExcitementRate: data.studentExcitementRate || 0,
-      studentActivationRate: data.studentActivationRate || 0,
-    }
-  } catch (error) {
-    console.error('获取今日数据失败:', error)
-    return {
-      studentEngagementRate: 0,
-      studentExcitementRate: 0,
-      studentActivationRate: 0,
-    }
-  }
-}
-
 // 学员数据
 export const getStudentData = async () => {
   try {
