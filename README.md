@@ -1,6 +1,6 @@
-# 数据中心管理系统 - React版本
+# 思政课堂学员自主学习系统 - Vue2版本
 
-这是一个用React重写的数据中心管理系统，完全使用Mock数据，具有动态数据更新和动画效果。
+这是一个用Vue2重写的思政课堂学员自主学习系统，完全使用Mock数据，具有动态数据更新和动画效果。
 
 ## 功能特性
 
@@ -32,12 +32,11 @@
 
 ## 技术栈
 
-- **React 18**: 前端框架
-- **TypeScript**: 类型安全
-- **Ant Design**: UI组件库
+- **Vue 2.7**: 前端框架
+- **Vue Router 3**: 路由管理
+- **Ant Design Vue 1.7**: UI组件库
 - **ECharts**: 数据可视化
-- **Styled Components**: CSS-in-JS样式
-- **React Router**: 路由管理
+- **Vue CLI**: 构建工具
 
 ## 安装和运行
 
@@ -47,13 +46,12 @@
 
 ### 安装依赖
 ```bash
-cd react-version
 npm install
 ```
 
 ### 启动开发服务器
 ```bash
-npm start
+npm run serve
 ```
 
 项目将在 http://localhost:3000 启动
@@ -68,32 +66,29 @@ npm run build
 ```
 src/
 ├── components/          # 通用组件
-│   ├── NotFound.tsx    # 404页面
+│   ├── NotFound.vue    # 404页面
 │   └── AiSystem/       # AI系统组件
 ├── pages/              # 页面组件
-│   ├── HomePage.tsx    # 首页
-│   ├── DayData.tsx     # 今日数据
-│   ├── ClassData.tsx   # 班级数据
-│   ├── TeacherData.tsx # 教员数据
-│   ├── StudentData.tsx # 学员数据
-│   └── AiSystem.tsx    # 智能中心
+│   ├── HomePage.vue    # 首页
+│   ├── DayData.vue     # 今日数据
+│   ├── ClassData.vue   # 班级数据
+│   ├── TeacherData.vue # 教员数据
+│   ├── StudentData.vue # 学员数据
+│   └── AiSystem.vue    # 智能中心
 ├── services/           # 服务层
-│   └── mockData.ts     # Mock数据服务
+│   └── mockData.js     # Mock数据服务
 ├── styles/             # 样式文件
 │   └── index.css       # 全局样式
-├── App.tsx             # 应用主组件
-└── index.tsx           # 应用入口
+├── router/             # 路由配置
+│   └── index.js        # 路由定义
+├── App.vue             # 应用主组件
+└── main.js             # 应用入口
 ```
 
 ## 核心特性说明
 
-### 动态数据更新
-- 使用`DataUpdater`类管理数据更新
-- 全局数据更新器每3秒刷新一次数据
-- 所有页面组件自动订阅数据更新
-
 ### Mock数据服务
-- `mockData.ts`提供所有页面的模拟数据
+- `mockData.js`提供所有页面的模拟数据
 - 数据生成函数确保数据的随机性和真实性
 - 支持实时数据变化模拟
 
@@ -120,18 +115,30 @@ src/
 
 ### 添加新页面
 1. 在`src/pages/`下创建新页面组件
-2. 在`App.tsx`中添加路由配置
-3. 在`mockData.ts`中添加对应的数据生成函数
+2. 在`src/router/index.js`中添加路由配置
+3. 在`mockData.js`中添加对应的数据生成函数
 
 ### 修改样式
 1. 全局样式在`src/styles/index.css`中修改
-2. 组件样式使用Styled Components
+2. 组件样式使用Vue单文件组件样式
 3. 颜色变量在CSS变量中统一管理
 
 ### 添加新图表
 1. 使用ECharts配置图表选项
-2. 在组件中使用`ReactECharts`渲染
+2. 在组件中使用`v-chart`渲染
 3. 确保图表数据与Mock数据同步更新
+
+## 迁移说明
+
+本项目已从React迁移到Vue2，主要变化：
+
+1. **框架变更**：React 18 → Vue 2.7
+2. **路由**：React Router → Vue Router 3
+3. **UI组件库**：Ant Design → Ant Design Vue
+4. **图表库**：echarts-for-react → vue-echarts
+5. **样式**：Styled Components → Vue单文件组件样式
+6. **状态管理**：React Hooks → Vue data/computed/methods
+7. **构建工具**：Create React App → Vue CLI
 
 ## 注意事项
 
@@ -139,3 +146,7 @@ src/
 - 数据更新频率为3秒，可根据需要调整
 - 图表配置支持响应式，自动适配容器大小
 - 样式完全复用原有项目，保持视觉一致性
+- 使用Vue 2.7语法，支持Composition API
+- 组件使用单文件组件(.vue)格式
+- 路由配置在`src/router/index.js`
+- 样式使用scoped避免污染
