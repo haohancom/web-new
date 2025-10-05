@@ -152,16 +152,6 @@ import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import VChart from 'vue-echarts'
 import {
-  getTodayData,
-  getStudentData,
-  getTeacherData,
-  getClassOverview,
-  getClassroomOverview,
-  getCourseTypes,
-  getTopSpeakingCourses,
-  getTopEngagementClasses,
-  getClassActionDistribution,
-  getClassEmotionDistribution,
   colorList
 } from '../services/mockData'
 
@@ -467,31 +457,10 @@ export default {
     },
     async initData() {
       try {
-        const [
-          todayData,
-          // studentData,
-          // teacherData,
-          // classOverview,
-          // classroomOverview,
-          // courseTypes,
-          // topSpeakingCourses,
-          // topEngagementClasses,
-          // classActionDistribution,
-          // classEmotionDistribution
-        ] = await Promise.all([
-          getTodayData(),
-          // getStudentData(),
-          // getTeacherData(),
-          // getClassOverview(),
-          // getClassroomOverview(),
-          // getCourseTypes(),
-          // getTopSpeakingCourses(),
-          // getTopEngagementClasses(),
-          // getClassActionDistribution(),
-          // getClassEmotionDistribution()
-        ])
-
-        this.todayData = todayData
+        this.todayData = {
+          ...this.todayData,
+          ...(await this.ten() || {})
+        }
         this.studentData = studentData
         this.teacherData = teacherData
         this.classOverview = classOverview
@@ -503,6 +472,30 @@ export default {
         this.classEmotionDistribution = classEmotionDistribution
       } catch (error) {
         console.error('初始化数据失败:', error)
+      }
+    },
+
+    async ten() {
+      try {
+        const response = await fetch("http://localhost:8080/today/ten")
+        if (!response.ok) {
+          throw new Error("网络请求失败")
+        }
+        const data = await response.json()
+
+        // 只取需要的字段
+        return {
+          studentEngagementRate: data.studentEngagementRate || 0,
+          studentExcitementRate: data.studentExcitementRate || 0,
+          studentActivationRate: data.studentActivationRate || 0,
+        }
+      } catch (error) {
+        console.error('获取今日数据失败:', error)
+        return {
+          studentEngagementRate: 0,
+          studentExcitementRate: 0,
+          studentActivationRate: 0,
+        }
       }
     }
   }
