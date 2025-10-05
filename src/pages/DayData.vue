@@ -198,12 +198,16 @@ export default {
         },
         { 
           label: '学员参与度', 
-          num: this.todayData ? `${this.todayData.studentEngagementRate?.toFixed(1) || 0}%` : '0.0%',
+          num: this.todayData
+              ? `${(Number(this.todayData.studentEngagementRate)).toFixed(1)}%`
+              : '0.0%',
           color: colorList[1]
         },
         { 
-          label: '学员兴奋度', 
-          num: this.todayData ? `${this.todayData.studentExcitementRate?.toFixed(1) || 0}%` : '0.0%',
+          label: '学员兴奋度',
+          num: this.todayData
+              ? `${(Number(this.todayData.studentExcitementRate)).toFixed(1)}%`
+              : '0.0%',
           color: colorList[2]
         },
         { 
@@ -212,8 +216,10 @@ export default {
           color: colorList[3]
         },
         { 
-          label: '学员活跃度', 
-          num: this.todayData ? `${this.todayData.studentActivationRate?.toFixed(1) || 0}%` : '0.0%',
+          label: '学员活跃度',
+          num: this.todayData
+              ? `${(Number(this.todayData.studentActivationRate)).toFixed(1)}%`
+              : '0.0%',
           color: colorList[4]
         },
         { 
@@ -463,26 +469,26 @@ export default {
       try {
         const [
           todayData,
-          studentData,
-          teacherData,
-          classOverview,
-          classroomOverview,
-          courseTypes,
-          topSpeakingCourses,
-          topEngagementClasses,
-          classActionDistribution,
-          classEmotionDistribution
+          // studentData,
+          // teacherData,
+          // classOverview,
+          // classroomOverview,
+          // courseTypes,
+          // topSpeakingCourses,
+          // topEngagementClasses,
+          // classActionDistribution,
+          // classEmotionDistribution
         ] = await Promise.all([
           getTodayData(),
-          getStudentData(),
-          getTeacherData(),
-          getClassOverview(),
-          getClassroomOverview(),
-          getCourseTypes(),
-          getTopSpeakingCourses(),
-          getTopEngagementClasses(),
-          getClassActionDistribution(),
-          getClassEmotionDistribution()
+          // getStudentData(),
+          // getTeacherData(),
+          // getClassOverview(),
+          // getClassroomOverview(),
+          // getCourseTypes(),
+          // getTopSpeakingCourses(),
+          // getTopEngagementClasses(),
+          // getClassActionDistribution(),
+          // getClassEmotionDistribution()
         ])
 
         this.todayData = todayData

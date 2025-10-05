@@ -28,27 +28,16 @@ export const getTodayData = async () => {
 
     // 只取需要的字段
     return {
-      totalStudents: data.totalStudents || randomInt(800, 1200),
-      totalTeachers: data.totalTeachers || randomInt(50, 80),
-      totalClasses: data.totalClasses || randomInt(20, 30),
-      activeStudents: data.activeStudents || randomInt(600, 900),
-      onlineStudents: data.onlineStudents || randomInt(400, 700),
-      attendanceRate: data.attendanceRate || randomBetween(85, 95),
-      engagementRate: data.engagementRate || randomBetween(70, 85),
-      satisfactionRate: data.satisfactionRate || randomBetween(80, 90)
+      studentEngagementRate: data.studentEngagementRate || 0,
+      studentExcitementRate: data.studentExcitementRate || 0,
+      studentActivationRate: data.studentActivationRate || 0,
     }
   } catch (error) {
     console.error('获取今日数据失败:', error)
-    // 返回模拟数据
     return {
-      totalStudents: randomInt(800, 1200),
-      totalTeachers: randomInt(50, 80),
-      totalClasses: randomInt(20, 30),
-      activeStudents: randomInt(600, 900),
-      onlineStudents: randomInt(400, 700),
-      attendanceRate: randomBetween(85, 95),
-      engagementRate: randomBetween(70, 85),
-      satisfactionRate: randomBetween(80, 90)
+      studentEngagementRate: 0,
+      studentExcitementRate: 0,
+      studentActivationRate: 0,
     }
   }
 }
