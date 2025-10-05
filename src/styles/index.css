@@ -1,0 +1,286 @@
+/* 复用原有项目的样式变量和基础样式 */
+:root {
+  --primary-color: #056de8;
+  --secondary-color: #056de8;
+  --font-stack: 'Microsoft YaHei', sans-serif;
+  --font-size: 14px;
+  --font-color: #000000;
+  --active-font-color: #056de8;
+  --title-color: #999999;
+  --hover-color: rgba(5, 109, 232, 0.7);
+  --background-color: rgb(242, 243, 246);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--font-color);
+  font-weight: 400;
+  background-color: var(--background-color);
+  font: 12px/1.5 tahoma, arial, 'Microsoft YaHei';
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* 工具类 */
+.clearfix:after {
+  content: '';
+  height: 0;
+  display: block;
+  visibility: hidden;
+  clear: both;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 动画效果 */
+.move-up {
+  transform: perspective(1px) translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+  transition-duration: 0.3s;
+  transition-property: box-shadow, transform;
+}
+
+.move-up:hover,
+.move-up:focus,
+.move-up:active {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2);
+}
+
+.zoom-in {
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  transform: perspective(1px) translateZ(0);
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+
+.zoom-in:hover,
+.zoom-in:focus,
+.zoom-in:active {
+  transform: perspective(1px) scale(1.1);
+}
+
+/* 间距工具类 */
+.margin-0 { margin: 0px; }
+.marginT-0 { margin-top: 0px; }
+.marginR-0 { margin-right: 0px; }
+.marginB-0 { margin-bottom: 0px; }
+.marginL-0 { margin-left: 0px; }
+.padding-0 { padding: 0px; }
+.paddingT-0 { padding-top: 0px; }
+.paddingR-0 { padding-right: 0px; }
+.paddingB-0 { padding-bottom: 0px; }
+.paddingL-0 { padding-left: 0px; }
+
+.margin-1 { margin: 5px; }
+.marginT-1 { margin-top: 5px; }
+.marginR-1 { margin-right: 5px; }
+.marginB-1 { margin-bottom: 5px; }
+.marginL-1 { margin-left: 5px; }
+.padding-1 { padding: 5px; }
+.paddingT-1 { padding-top: 5px; }
+.paddingR-1 { padding-right: 5px; }
+.paddingB-1 { padding-bottom: 5px; }
+.paddingL-1 { padding-left: 5px; }
+
+.margin-2 { margin: 10px; }
+.marginT-2 { margin-top: 10px; }
+.marginR-2 { margin-right: 10px; }
+.marginB-2 { margin-bottom: 10px; }
+.marginL-2 { margin-left: 10px; }
+.padding-2 { padding: 10px; }
+.paddingT-2 { padding-top: 10px; }
+.paddingR-2 { padding-right: 10px; }
+.paddingB-2 { padding-bottom: 10px; }
+.paddingL-2 { padding-left: 10px; }
+
+.margin-3 { margin: 15px; }
+.marginT-3 { margin-top: 15px; }
+.marginR-3 { margin-right: 15px; }
+.marginB-3 { margin-bottom: 15px; }
+.marginL-3 { margin-left: 15px; }
+.padding-3 { padding: 15px; }
+.paddingT-3 { padding-top: 15px; }
+.paddingR-3 { padding-right: 15px; }
+.paddingB-3 { padding-bottom: 15px; }
+.paddingL-3 { padding-left: 15px; }
+
+.margin-4 { margin: 20px; }
+.marginT-4 { margin-top: 20px; }
+.marginR-4 { margin-right: 20px; }
+.marginB-4 { margin-bottom: 20px; }
+.marginL-4 { margin-left: 20px; }
+.padding-4 { padding: 20px; }
+.paddingT-4 { padding-top: 20px; }
+.paddingR-4 { padding-right: 20px; }
+.paddingB-4 { padding-bottom: 20px; }
+.paddingL-4 { padding-left: 20px; }
+
+.margin-5 { margin: 25px; }
+.marginT-5 { margin-top: 25px; }
+.marginR-5 { margin-right: 25px; }
+.marginB-5 { margin-bottom: 25px; }
+.marginL-5 { margin-left: 25px; }
+.padding-5 { padding: 25px; }
+.paddingT-5 { padding-top: 25px; }
+.paddingR-5 { padding-right: 25px; }
+.paddingB-5 { padding-bottom: 25px; }
+.paddingL-5 { padding-left: 25px; }
+
+.margin-10 { margin: 50px; }
+.marginT-10 { margin-top: 50px; }
+.marginR-10 { margin-right: 50px; }
+.marginB-10 { margin-bottom: 50px; }
+.marginL-10 { margin-left: 50px; }
+.padding-10 { padding: 50px; }
+.paddingT-10 { padding-top: 50px; }
+.paddingR-10 { padding-right: 50px; }
+.paddingB-10 { padding-bottom: 50px; }
+.paddingL-10 { padding-left: 50px; }
+
+.margin-15 { margin: 75px; }
+.marginT-15 { margin-top: 75px; }
+.marginR-15 { margin-right: 75px; }
+.marginB-15 { margin-bottom: 75px; }
+.marginL-15 { margin-left: 75px; }
+.padding-15 { padding: 75px; }
+.paddingT-15 { padding-top: 75px; }
+.paddingR-15 { padding-right: 75px; }
+.paddingB-15 { padding-bottom: 75px; }
+.paddingL-15 { padding-left: 75px; }
+
+.margin-20 { margin: 100px; }
+.marginT-20 { margin-top: 100px; }
+.marginR-20 { margin-right: 100px; }
+.marginB-20 { margin-bottom: 100px; }
+.marginL-20 { margin-left: 100px; }
+.padding-20 { padding: 100px; }
+.paddingT-20 { padding-top: 100px; }
+.paddingR-20 { padding-right: 100px; }
+.paddingB-20 { padding-bottom: 100px; }
+.paddingL-20 { padding-left: 100px; }
+
+/* 数据卡片样式 */
+.data-card {
+  padding: 20px;
+  border-radius: 6px;
+  background: #F7F8FA;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.data-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--primary-color);
+}
+
+.data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 109, 232, 0.15);
+}
+
+.data-card-title {
+  margin-top: 5px;
+  font-size: 16px;
+  color: #7c7c7c;
+}
+
+.data-card-number {
+  color: var(--primary-color);
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* 图表容器样式 */
+.chart-container {
+  background: #f7f8fa;
+  padding: 10px 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.chart-title::after {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px;
+  background: #1890ff;
+  left: -14px;
+  top: 0px;
+}
+
+/* 响应式布局 */
+@media (max-width: 1200px) {
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .data-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .data-card {
+    padding: 15px;
+  }
+  
+  .data-card-number {
+    font-size: 18px;
+  }
+}
