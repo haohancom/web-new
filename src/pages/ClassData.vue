@@ -74,6 +74,7 @@
 import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import moment from 'moment'
+import service from '@/utils/fetch'
 
 export default {
   name: 'ClassData',
@@ -180,15 +181,20 @@ export default {
         const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
         const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
         
-        const response = await fetch(
-          `http://118.25.75.217:8080/aiClass/queryCourse?startDate=${startDateStr}&endDate=${endDateStr}`
-        )
+        const response = await service({
+          method: 'get',
+          url: '/aiClass/queryCourse',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr
+          }
+        })
         
-        if (response.ok) {
-          const data = await response.json()
-          this.courseList = data || []
+        // 处理新的响应格式：{"courseId":"{courseName}","courseId":"{courseName}"}
+        // 提取所有的 courseName 值
+        if (response && typeof response === 'object') {
+          this.courseList = Object.values(response) || []
         } else {
-          console.error('获取课程列表失败:', response.statusText)
           this.courseList = []
         }
       } catch (error) {
