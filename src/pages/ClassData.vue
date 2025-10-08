@@ -58,15 +58,24 @@
       </div>
     </div>
 
-    <a-card class="data-card">
-      <div class="card-title">班级数据概览</div>
-      <a-table 
-        :columns="columns" 
-        :data-source="classData" 
-        :pagination="false"
-        :loading="loading"
-      />
-    </a-card>
+    <!-- 顶部数据卡片 -->
+    <div class="data-grid">
+      <a-card
+        v-for="(item, index) in numList"
+        :key="index"
+        class="data-card"
+        :style="{ '--card-color': item.color }"
+      >
+        <div class="card-number">
+          <span v-if="item.label1">{{ item.num1 }} / </span>
+          {{ item.num }}
+        </div>
+        <div class="card-title">
+          <span v-if="item.label1">{{ item.label1 }} / </span>
+          {{ item.label }}
+        </div>
+      </a-card>
+    </div>
   </div>
 </template>
 
@@ -75,6 +84,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import moment from 'moment'
 import service from '@/utils/fetch'
+import { colorList } from "../services/mockData";
 
 export default {
   name: 'ClassData',
@@ -85,12 +95,14 @@ export default {
     return {
       h,
       loading: false,
-      classData: [],
+      classData: {},
+      studentData: {},
       // 筛选相关数据
       startDate: null,
       endDate: null,
       course: null,
       courseList: [],
+      courseMapping: {}, // 存储课程名到courseId的映射
       columns: [
         {
           title: '班级名称',
@@ -131,7 +143,49 @@ export default {
   computed: {
     canSelectCourse() {
       return this.startDate && this.endDate
-    }
+    },
+    numList() {
+      return [
+        {
+          label: "学员人数",
+          num: this.studentData?.totalStudents || 0,
+          label1: "教员人数",
+          num1: this.studentData?.totalTeachers || 0,
+          color: colorList[0],
+        },
+        {
+          label: "学员参与度",
+          num: this.classData && this.classData.studentEngagementRate !== null && this.classData.studentEngagementRate !== undefined
+            ? `${Number(this.classData.studentEngagementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[1],
+        },
+        {
+          label: "学员兴奋度",
+          num: this.classData && this.classData.studentExcitementRate !== null && this.classData.studentExcitementRate !== undefined
+            ? `${Number(this.classData.studentExcitementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[2],
+        },
+        {
+          label: "学员抬头率",
+          num: this.headupRate || "0.0%",
+          color: colorList[3],
+        },
+        {
+          label: "学员活跃度",
+          num: this.classData && this.classData.studentActivationRate !== null && this.classData.studentActivationRate !== undefined
+            ? `${Number(this.classData.studentActivationRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[4],
+        },
+        {
+          label: "课程数",
+          num: this.studentData?.courses || 0,
+          color: colorList[5],
+        },
+      ];
+    },
   },
   async mounted() {
     await this.loadClassData()
@@ -148,6 +202,7 @@ export default {
         this.endDate = null
         this.course = null
         this.courseList = []
+        this.courseMapping = {}
       }
     },
     onEndDateChange(date) {
@@ -158,11 +213,16 @@ export default {
       } else {
         this.course = null
         this.courseList = []
+        this.courseMapping = {}
       }
     },
     onCourseChange(value) {
       this.course = value
       console.log('选择的课程:', value)
+      // 选择课程后获取班级数据
+      if (value) {
+        this.fetchClassData()
+      }
     },
     // 禁用结束日期（不能早于开始日期）
     disabledEndDate(current) {
@@ -191,30 +251,73 @@ export default {
         })
         
         // 处理新的响应格式：{"courseId":"{courseName}","courseId":"{courseName}"}
-        // 提取所有的 courseName 值
+        // 提取所有的 courseName 值，并保存映射关系
         if (response && typeof response === 'object') {
           this.courseList = Object.values(response) || []
+          // 保存课程名到courseId的映射
+          this.courseMapping = {}
+          Object.entries(response).forEach(([courseId, courseName]) => {
+            this.courseMapping[courseName] = courseId
+          })
         } else {
           this.courseList = []
+          this.courseMapping = {}
         }
       } catch (error) {
         console.error('获取课程列表出错:', error)
         this.courseList = []
       }
     },
+    // 获取班级数据
+    async fetchClassData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/twentyFive',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 更新班级数据
+        this.classData = response || {}
+        
+        // 模拟学员和教员数据（实际项目中应该从其他接口获取）
+        this.studentData = {
+          totalStudents: 120,
+          totalTeachers: 8,
+          courses: this.courseList.length
+        }
+        
+      } catch (error) {
+        console.error('获取班级数据出错:', error)
+        this.classData = {}
+      }
+    },
     async loadClassData() {
       this.loading = true
       try {
-        // 模拟数据
-        this.classData = Array.from({ length: 10 }, (_, index) => ({
-          key: index + 1,
-          name: `班级${index + 1}`,
-          studentCount: Math.floor(Math.random() * 30) + 20,
-          teacher: `教员${index + 1}`,
-          attendanceRate: (Math.random() * 20 + 80).toFixed(1),
-          engagementRate: (Math.random() * 25 + 70).toFixed(1),
-          satisfactionRate: (Math.random() * 15 + 80).toFixed(1)
-        }))
+        // 初始化时加载一些默认数据
+        this.studentData = {
+          totalStudents: 0,
+          totalTeachers: 0,
+          courses: 0
+        }
       } catch (error) {
         console.error('加载班级数据失败:', error)
       } finally {
@@ -249,30 +352,6 @@ export default {
   font-weight: bold;
 }
 
-.data-card {
-  background: #f7f8fa;
-  border-radius: 10px;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  position: relative;
-  margin-bottom: 20px;
-  padding-left: 14px;
-}
-
-.card-title::after {
-  content: '';
-  position: absolute;
-  height: 100%;
-  width: 4px;
-  border-radius: 2px;
-  background: #1890ff;
-  left: 0;
-  top: 0;
-}
 
 /* 筛选框样式 */
 .filter-section {
@@ -309,6 +388,63 @@ export default {
 
 .course-select {
   min-width: 200px;
+}
+
+/* 数据网格样式 */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .data-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.data-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 109, 232, 0.15);
+}
+
+.data-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--card-color);
+}
+
+.card-number {
+  color: var(--card-color);
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.card-title {
+  font-size: 16px;
+  color: #7c7c7c;
 }
 
 /* 响应式设计 */
