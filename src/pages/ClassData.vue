@@ -58,6 +58,14 @@
       </div>
     </div>
 
+    <!-- 班级信息区域 -->
+    <div class="class-info-section" v-if="classList.length > 0">
+      <div class="class-info-content">
+        当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
+        分别是<span class="class-names">{{ displayClassNames }}</span>
+      </div>
+    </div>
+
     <!-- 顶部数据卡片 -->
     <div class="data-grid">
       <a-card
@@ -98,6 +106,7 @@ export default {
       classData: {},
       studentData: {},
       headupRate: 0, // 学员抬头率
+      classList: [], // 班级列表
       // 筛选相关数据
       startDate: null,
       endDate: null,
@@ -144,6 +153,24 @@ export default {
   computed: {
     canSelectCourse() {
       return this.startDate && this.endDate
+    },
+    displayClassNames() {
+      if (!this.classList || this.classList.length === 0) {
+        return ''
+      }
+      
+      // 最多显示10个班级名
+      const displayClasses = this.classList.slice(0, 10)
+      let result = displayClasses.join('小班、')
+      
+      // 如果超过10个，添加省略号
+      if (this.classList.length > 10) {
+        result += '小班等'
+      } else {
+        result += '小班'
+      }
+      
+      return result
     },
     numList() {
       return [
@@ -218,13 +245,15 @@ export default {
         this.courseList = []
         this.courseMapping = {}
         this.headupRate = 0
+        this.classList = []
       }
     },
     onCourseChange(value) {
       this.course = value
       console.log('选择的课程:', value)
-      // 重置抬头率
+      // 重置抬头率和班级列表
       this.headupRate = 0
+      this.classList = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -312,6 +341,9 @@ export default {
         // 获取学员抬头率
         await this.fetchHeadupRate()
         
+        // 获取班级列表
+        await this.fetchClassList()
+        
       } catch (error) {
         console.error('获取班级数据出错:', error)
         this.classData = {}
@@ -349,6 +381,40 @@ export default {
       } catch (error) {
         console.error('获取学员抬头率出错:', error)
         this.headupRate = 0
+      }
+    },
+    // 获取班级列表
+    async fetchClassList() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/twentySeven',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 更新班级列表数据
+        this.classList = Array.isArray(response) ? response : []
+        
+      } catch (error) {
+        console.error('获取班级列表出错:', error)
+        this.classList = []
       }
     },
     async loadClassData() {
@@ -430,6 +496,32 @@ export default {
 
 .course-select {
   min-width: 200px;
+}
+
+/* 班级信息区域样式 */
+.class-info-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #1890ff;
+}
+
+.class-info-content {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.highlight {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.class-names {
+  color: #666;
+  font-weight: 500;
 }
 
 /* 数据网格样式 */
