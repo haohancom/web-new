@@ -334,8 +334,8 @@ export default {
         
         // 模拟学员和教员数据（实际项目中应该从其他接口获取）
         this.studentData = {
-          totalStudents: 120,
-          totalTeachers: 8,
+          totalStudents: 0,
+          totalTeachers: 0,
         }
         
         // 获取学员抬头率
