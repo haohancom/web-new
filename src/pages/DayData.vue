@@ -71,13 +71,18 @@
         <div class="chart-title">参与度前十班级动作分布</div>
         <v-chart
           :option="actionDistributionOptions"
+           id="chart5"
           style="height: 280px"
         ></v-chart>
       </a-card>
 
       <a-card class="chart-card">
         <div class="chart-title">兴奋度前十班级情绪分布</div>
-        <v-chart :option="actionDistributionOptions" style="height: 280px"></v-chart>
+        <v-chart
+         id="chart6"
+          :option="actionDistributionOptions"
+          style="height: 280px"
+        ></v-chart>
       </a-card>
 
       <!-- <a-card class="chart-card">
@@ -89,30 +94,36 @@
     <div class="overview-grid">
       <a-card class="overview-card">
         <div class="overview-title">班级概况</div>
-        <div class="item-grid" style="grid-template-columns: repeat(3, 1fr)">
+         <v-chart
+          id="chart7"
+          :option="speakingOptions"
+          style="height: 280px"
+        ></v-chart>
+        <!-- <div class="item-grid" style="grid-template-columns: repeat(3, 1fr)">
           <div
             v-for="(item, index) in classOverview"
             :key="index"
             class="overview-item"
-            :style="{ background :random}"
+            :style="{ background: 'green' }"
           >
             <div class="item-number">{{ item.num }}</div>
             <div class="item-title">{{ item.title }}</div>
           </div>
-        </div>
+        </div> -->
       </a-card>
 
       <a-card class="overview-card">
-        <div class="overview-title">课堂概况</div>
+        <div class="overview-title">课堂概况</div>、
+      
         <div class="item-grid" style="grid-template-columns: repeat(2, 1fr)">
           <div
             v-for="(item, index) in classroomOverview"
             :key="index"
             class="overview-item"
-            :style="{ background: item.background }"
+            :style="{background :'#1890ff'}"
           >
             <div class="item-number">{{ item.num }}</div>
-            <div class="item-title">{{ item.title }}</div>
+            <div class="item-title">{{ item.label }}</div>
           </div>
         </div>
       </a-card>
@@ -133,7 +144,8 @@ import * as echarts from "echarts";
 import { h } from "vue";
 import VChart from "vue-echarts";
 import { colorList } from "../services/mockData";
-import { dzfb, jydz, fycs, fyqs } from "@/api/dayData";
+import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx } from "@/api/dayData";
+import { xscq } from "../api/dayData";
 
 export default {
   name: "DayData",
@@ -143,7 +155,8 @@ export default {
   },
   data() {
     return {
-      // numList:[],
+      headupRate:0,
+     stAttRate:50,
       studentActionOptions: {
         tooltip: {
           trigger: "item",
@@ -224,6 +237,11 @@ export default {
           },
         },
         xAxis: {
+          axisLabel: {
+            interval: 0, // 强制显示所有标签
+            rotate: 45, // 倾斜45°
+            fontSize: 12,
+          },
           type: "category",
           boundaryGap: false,
           data: ["课程1", "课程2", "课程3", "课程4"],
@@ -264,10 +282,9 @@ export default {
       studentData: {},
       teacherData: {},
       classOverview: [
-        {num:11,title:"前排就坐率"},
-         {num:"22",title:"出勤率"}
+        { num: 11, title: "前排就坐率" },
+        { num: "22", title: "出勤率" },
       ],
-      classroomOverview: {},
       courseTypes: {},
       topSpeakingCourses: {},
       topEngagementClasses: {},
@@ -305,9 +322,8 @@ export default {
         },
         {
           label: "学员抬头率",
-          num: this.todayData
-            ? `${this.todayData.studentFocusRate?.toFixed(1) || 0}%`
-            : "0.0%",
+          num: this.headupRate,
+          
           color: colorList[3],
         },
         {
@@ -324,8 +340,41 @@ export default {
         },
       ];
     },
+    classroomOverview(){
+       return [
+            {
+          label: "学员出勤率",
+          num: this.stAttRate
+            ? `${Number(this.stAttRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[1],
+        },
+          {
+          label: "学员参与度",
+          num: this.todayData
+            ? `${Number(this.todayData.studentEngagementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[1],
+        },
+        {
+          label: "学员兴奋度",
+          num: this.todayData
+            ? `${Number(this.todayData.studentExcitementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[2],
+        },
+  
+        {
+          label: "学员活跃度",
+          num: this.todayData
+            ? `${Number(this.todayData.studentActivationRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[4],
+        },
+      
+       ]
+    },
     // studentActionOptions() {
-    //   console.log(886)
     //   if (!this.studentData?.actions) return {}
     //   return {
     //     tooltip: { trigger: 'item' },
@@ -560,21 +609,49 @@ export default {
   methods: {
     showChart() {},
     getData() {
+      //今日数据概况
+      jrgk({}).then((res) =>{
+                   this.todayData = res
+      })
+
+
+      //学员动作分布
       dzfb({}).then((res) => {
         if (res) {
           this.studentActionOptions.series[0].data = res;
           var chart1 = echarts.init(document.getElementById("chart1"));
           chart1.setOption(this.studentActionOptions);
+
+              // 需要排除的类型
+const exclude = ["玩手机", "低头", "趴桌子"];
+
+// 过滤数据
+const filtered = res.filter(item => !exclude.includes(item.name));
+console.log(filtered)
+// 计算平均值
+const avg = filtered.reduce((sum, item) => sum + parseFloat(item.value), 0) / filtered.length;
+
+// 输出结果
+console.log("抬头率:", avg.toFixed(2));
+this.headupRate = avg.toFixed(2) + "%"
+          
         } else {
           this.$message.warning("请稍后重试");
         }
         this.loading = false;
       });
+
+      //教员动作分布
       jydz({}).then((res) => {
         this.studentActionOptions.series[0].data = res;
         var chart2 = echarts.init(document.getElementById("chart2"));
         chart2.setOption(this.studentActionOptions);
-      });
+
+    
+      }
+    );
+
+      //发言次数分布
       fycs({}).then((res) => {
         const xData = [];
         const yData = [];
@@ -588,6 +665,9 @@ export default {
         var chart3 = echarts.init(document.getElementById("chart3"));
         chart3.setOption(this.speakingOptions);
       });
+
+
+      //发言次数前十课程
       fyqs({}).then((res) => {
         const xData = [];
         const yData = [];
@@ -601,6 +681,77 @@ export default {
         var chart4 = echarts.init(document.getElementById("chart4"));
         chart4.setOption(this.speakingOptions);
       });
+
+       //参与度前十动作分布
+      cydz({}).then((res) => {
+        const courseNames = Object.keys(res); // 
+
+        // 2️⃣ 动作名（假设各课程动作一致）
+        const actions = res[courseNames[0]].map((item) => item.action);
+
+        // 3️⃣ 生成 series 数组
+        const seriesData = actions.map((action) => {
+          return {
+            name: action,
+            type: "line",
+            data: courseNames.map((course) => {
+              const found = res[course].find((i) => i.action === action);
+              return found ? found.count : 0;
+            }),
+          };
+        });
+        this.actionDistributionOptions.xAxis.data = courseNames
+        this.actionDistributionOptions.series = seriesData
+         var chart5 = echarts.init(document.getElementById("chart5"));
+        chart5.setOption(this.actionDistributionOptions);
+      });
+
+      
+       //兴奋度前十情绪分布
+      xfqx({}).then((res) => {
+        const courseNames = Object.keys(res); // 
+
+        // 2️⃣ 动作名（假设各课程动作一致）
+        const emotion = res[courseNames[0]].map((item) => item.emotion);
+
+        // 3️⃣ 生成 series 数组
+        const seriesData = emotion.map((emotion) => {
+          return {
+            name: emotion,
+            type: "line",
+            data: courseNames.map((course) => {
+              const found = res[course].find((i) => i.emotion === emotion);
+              return found ? found.count : 0;
+            }),
+          };
+        });
+        this.actionDistributionOptions.xAxis.data = courseNames
+        this.actionDistributionOptions.series = seriesData
+         var chart6 = echarts.init(document.getElementById("chart6"));
+        chart6.setOption(this.actionDistributionOptions);
+      });
+
+      
+      //发言次数分布
+      bjgk({}).then((res) => {
+        const xData = [];
+        const yData = [];
+
+        for (const [key, value] of Object.entries(res)) {
+          xData.push(key); // 课程名
+          yData.push(Number(value)); // 数量，确保转成数字
+        }
+        this.speakingOptions.xAxis.data = xData;
+        this.speakingOptions.series[0].data = yData;
+        var chart7 = echarts.init(document.getElementById("chart7"));
+        chart7.setOption(this.speakingOptions);
+      });
+
+      //学生出勤率
+         xscq({}).then((res) =>{
+          this.stAttRate = res
+         })
+
     },
     goHome() {
       this.$router.push("/");
@@ -625,29 +776,7 @@ export default {
       }
     },
 
-    // async ten() {
-    //   try {
-    //     const response = await fetch("http://localhost:8080/today/ten")
-    //     if (!response.ok) {
-    //       throw new Error("网络请求失败")
-    //     }
-    //     const data = await response.json()
 
-    //     // 只取需要的字段
-    //     return {
-    //       studentEngagementRate: data.studentEngagementRate || 0,
-    //       studentExcitementRate: data.studentExcitementRate || 0,
-    //       studentActivationRate: data.studentActivationRate || 0,
-    //     }
-    //   } catch (error) {
-    //     console.error('获取今日数据失败:', error)
-    //     return {
-    //       studentEngagementRate: 0,
-    //       studentExcitementRate: 0,
-    //       studentActivationRate: 0,
-    //     }
-    //   }
-    // }
   },
 };
 </script>
