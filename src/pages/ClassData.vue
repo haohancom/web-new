@@ -97,6 +97,7 @@ export default {
       loading: false,
       classData: {},
       studentData: {},
+      headupRate: 0, // 学员抬头率
       // 筛选相关数据
       startDate: null,
       endDate: null,
@@ -169,7 +170,9 @@ export default {
         },
         {
           label: "学员抬头率",
-          num: this.headupRate || "0.0%",
+          num: this.headupRate !== null && this.headupRate !== undefined 
+            ? `${Number(this.headupRate).toFixed(1)}%`
+            : "0.0%",
           color: colorList[3],
         },
         {
@@ -214,11 +217,14 @@ export default {
         this.course = null
         this.courseList = []
         this.courseMapping = {}
+        this.headupRate = 0
       }
     },
     onCourseChange(value) {
       this.course = value
       console.log('选择的课程:', value)
+      // 重置抬头率
+      this.headupRate = 0
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -301,12 +307,48 @@ export default {
         this.studentData = {
           totalStudents: 120,
           totalTeachers: 8,
-          courses: this.courseList.length
         }
+        
+        // 获取学员抬头率
+        await this.fetchHeadupRate()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
         this.classData = {}
+      }
+    },
+    // 获取学员抬头率
+    async fetchHeadupRate() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/twentySix',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 更新学员抬头率数据
+        this.headupRate = response || 0
+        
+      } catch (error) {
+        console.error('获取学员抬头率出错:', error)
+        this.headupRate = 0
       }
     },
     async loadClassData() {
