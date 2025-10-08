@@ -1,12 +1,7 @@
 <template>
   <div class="page-container">
     <div class="header">
-      <a-button 
-        type="primary" 
-        :icon="h(ArrowLeftOutlined)" 
-        @click="goHome"
-        class="back-button"
-      >
+      <a-button type="primary" @click="goHome" class="back-button">
         返回首页
       </a-button>
       <h1 class="title">今日数据</h1>
@@ -14,9 +9,9 @@
 
     <!-- 顶部数据卡片 -->
     <div class="data-grid">
-      <a-card 
-        v-for="(item, index) in numList" 
-        :key="index" 
+      <a-card
+        v-for="(item, index) in numList"
+        :key="index"
         class="data-card"
         :style="{ '--card-color': item.color }"
       >
@@ -35,96 +30,84 @@
     <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">学员动作分布</div>
-        <v-chart 
-          :option="studentActionOptions" 
+        <v-chart
+          id="chart1"
+          :option="studentActionOptions"
           style="height: 280px"
-        />
+        ></v-chart>
       </a-card>
-      
+
       <a-card class="chart-card">
         <div class="chart-title">教员动作分布</div>
-        <v-chart 
-          :option="teacherActionOptions" 
+        <v-chart
+          id="chart2"
+          :option="teacherActionOptions"
           style="height: 280px"
-        />
+        ></v-chart>
       </a-card>
-      
-      <a-card class="chart-card">
-        <div class="chart-title">教员情绪分布</div>
-        <v-chart 
-          :option="teacherEmotionOptions" 
+
+      <a-card class="chart-card" style="margin-bottom: 20px">
+        <div class="chart-title">课程发言次数分布</div>
+        <v-chart
+          id="chart3"
+          :option="speakingOptions"
           style="height: 280px"
-        />
+        ></v-chart>
       </a-card>
     </div>
-
-    <!-- 发言次数前十课程 -->
-    <a-card class="chart-card" style="margin-bottom: 20px;">
-      <div class="chart-title">课程发言次数分布</div>
-      <v-chart 
-        :option="speakingOptions" 
-        style="height: 280px"
-      />
-    </a-card>
 
     <!-- 底部图表区域 -->
     <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">发言次数前十课程</div>
-        <v-chart 
-          :option="speakingOptions" 
+        <v-chart
+          id="chart4"
+          :option="speakingOptions"
           style="height: 280px"
-        />
+        ></v-chart>
       </a-card>
-      
+
       <a-card class="chart-card">
         <div class="chart-title">参与度前十班级动作分布</div>
-        <v-chart 
-          :option="actionDistributionOptions" 
+        <v-chart
+          :option="actionDistributionOptions"
           style="height: 280px"
-        />
+        ></v-chart>
       </a-card>
-      
+
       <a-card class="chart-card">
         <div class="chart-title">兴奋度前十班级情绪分布</div>
-        <v-chart 
-          :option="emotionDistributionOptions" 
-          style="height: 280px"
-        />
+        <v-chart :option="actionDistributionOptions" style="height: 280px"></v-chart>
       </a-card>
-      
-      <a-card class="chart-card">
+
+      <!-- <a-card class="chart-card">
         <div class="chart-title">参与度前十班级对比</div>
-        <v-chart 
-          :option="engagementOptions" 
-          style="height: 280px"
-        />
-      </a-card>
+      </a-card> -->
     </div>
 
     <!-- 概况区域 -->
     <div class="overview-grid">
       <a-card class="overview-card">
         <div class="overview-title">班级概况</div>
-        <div class="item-grid" style="grid-template-columns: repeat(3, 1fr);">
-          <div 
-            v-for="(item, index) in classOverview" 
-            :key="index" 
+        <div class="item-grid" style="grid-template-columns: repeat(3, 1fr)">
+          <div
+            v-for="(item, index) in classOverview"
+            :key="index"
             class="overview-item"
-            :style="{ background: item.background }"
+            :style="{ background :random}"
           >
             <div class="item-number">{{ item.num }}</div>
             <div class="item-title">{{ item.title }}</div>
           </div>
         </div>
       </a-card>
-      
+
       <a-card class="overview-card">
         <div class="overview-title">课堂概况</div>
-        <div class="item-grid" style="grid-template-columns: repeat(2, 1fr);">
-          <div 
-            v-for="(item, index) in classroomOverview" 
-            :key="index" 
+        <div class="item-grid" style="grid-template-columns: repeat(2, 1fr)">
+          <div
+            v-for="(item, index) in classroomOverview"
+            :key="index"
             class="overview-item"
             :style="{ background: item.background }"
           >
@@ -133,14 +116,11 @@
           </div>
         </div>
       </a-card>
-      
+
       <a-card class="overview-card">
         <div class="overview-title">课堂类型</div>
-        <div style="padding: 20px;">
-          <v-chart 
-            :option="courseTypeOptions" 
-            style="height: 280px"
-          />
+        <div style="padding: 20px">
+          <!-- <v-chart :option="courseTypeOptions" style="height: 280px" /> -->
         </div>
       </a-card>
     </div>
@@ -148,358 +128,528 @@
 </template>
 
 <script>
-import { ArrowLeftOutlined } from '@ant-design/icons-vue'
-import { h } from 'vue'
-import VChart from 'vue-echarts'
-import {
-  colorList
-} from '../services/mockData'
+import { ArrowLeftOutlined } from "@ant-design/icons-vue";
+import * as echarts from "echarts";
+import { h } from "vue";
+import VChart from "vue-echarts";
+import { colorList } from "../services/mockData";
+import { dzfb, jydz, fycs, fyqs } from "@/api/dayData";
 
 export default {
-  name: 'DayData',
+  name: "DayData",
   components: {
     VChart,
-    ArrowLeftOutlined
+    ArrowLeftOutlined,
   },
   data() {
     return {
-      todayData: null,
-      studentData: null,
-      teacherData: null,
-      classOverview: null,
-      classroomOverview: null,
-      courseTypes: null,
-      topSpeakingCourses: null,
-      topEngagementClasses: null,
-      classActionDistribution: null,
-      classEmotionDistribution: null,
-      h
-    }
+      // numList:[],
+      studentActionOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "Access From",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [
+              { value: 1048, name: "Search Engine" },
+              { value: 735, name: "Direct" },
+              { value: 580, name: "Email" },
+              { value: 484, name: "Union Ads" },
+              { value: 300, name: "Video Ads" },
+            ],
+          },
+        ],
+      },
+      teacherActionOptions: {},
+      teacherEmotionOptions: {},
+      speakingOptions: {
+        xAxis: {
+          axisLabel: {
+            interval: 0, // 强制显示所有标签
+            rotate: 45, // 倾斜45°
+            fontSize: 12,
+          },
+          type: "category",
+          data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            data: [120, 200, 150, 80, 70, 110, 130],
+            type: "bar",
+          },
+        ],
+      },
+      engagementOptions: {},
+      actionDistributionOptions: {
+        tooltip: {
+          trigger: "axis",
+        },
+        legend: {
+          data: ["快乐", "悲伤", "惊讶", "厌恶"],
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        toolbox: {
+          feature: {
+            saveAsImage: {},
+          },
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: ["课程1", "课程2", "课程3", "课程4"],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            name: "快乐",
+            type: "line",
+
+            data: [120, 132, 101, 134],
+          },
+          {
+            name: "悲伤",
+            type: "line",
+
+            data: [220, 182, 191, 234, 290],
+          },
+          {
+            name: "惊讶",
+            type: "line",
+
+            data: [150, 232, 201, 154, 190],
+          },
+          {
+            name: "厌恶",
+            type: "line",
+
+            data: [320, 332, 301, 334, 390],
+          },
+        ],
+      },
+      emotionDistributionOptions: {},
+      courseTypeOptions: {},
+      todayData: {},
+      studentData: {},
+      teacherData: {},
+      classOverview: [
+        {num:11,title:"前排就坐率"},
+         {num:"22",title:"出勤率"}
+      ],
+      classroomOverview: {},
+      courseTypes: {},
+      topSpeakingCourses: {},
+      topEngagementClasses: {},
+      classActionDistribution: {},
+      classEmotionDistribution: {},
+      h,
+    };
+  },
+  created() {
+    this.getData();
   },
   computed: {
     numList() {
       return [
-        { 
-          label: '学员人数', 
-          num: this.studentData?.totalStudents || 0, 
-          label1: '教员人数', 
+        {
+          label: "学员人数",
+          num: this.studentData?.totalStudents || 0,
+          label1: "教员人数",
           num1: this.studentData?.totalTeachers || 0,
-          color: colorList[0]
+          color: colorList[0],
         },
-        { 
-          label: '学员参与度', 
+        {
+          label: "学员参与度",
           num: this.todayData
-              ? `${(Number(this.todayData.studentEngagementRate)).toFixed(1)}%`
-              : '0.0%',
-          color: colorList[1]
+            ? `${Number(this.todayData.studentEngagementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[1],
         },
-        { 
-          label: '学员兴奋度',
+        {
+          label: "学员兴奋度",
           num: this.todayData
-              ? `${(Number(this.todayData.studentExcitementRate)).toFixed(1)}%`
-              : '0.0%',
-          color: colorList[2]
+            ? `${Number(this.todayData.studentExcitementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[2],
         },
-        { 
-          label: '学员抬头率', 
-          num: this.todayData ? `${this.todayData.studentFocusRate?.toFixed(1) || 0}%` : '0.0%',
-          color: colorList[3]
-        },
-        { 
-          label: '学员活跃度',
+        {
+          label: "学员抬头率",
           num: this.todayData
-              ? `${(Number(this.todayData.studentActivationRate)).toFixed(1)}%`
-              : '0.0%',
-          color: colorList[4]
+            ? `${this.todayData.studentFocusRate?.toFixed(1) || 0}%`
+            : "0.0%",
+          color: colorList[3],
         },
-        { 
-          label: '课程数', 
+        {
+          label: "学员活跃度",
+          num: this.todayData
+            ? `${Number(this.todayData.studentActivationRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[4],
+        },
+        {
+          label: "课程数",
           num: this.studentData?.courses || 0,
-          color: colorList[5]
-        }
-      ]
+          color: colorList[5],
+        },
+      ];
     },
-    studentActionOptions() {
-      if (!this.studentData?.actions) return {}
-      return {
-        tooltip: { trigger: 'item' },
-        legend: {
-          orient: 'vertical',
-          top: 'center',
-          right: 0,
-          data: this.studentData.actions.map(item => item.name)
-        },
-        series: [{
-          type: 'pie',
-          radius: ['70%', '96%'],
-          left: 'center',
-          center: [40, 'center'],
-          data: this.studentData.actions,
-          label: { show: false },
-          labelLine: { show: false },
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }]
-      }
-    },
-    teacherActionOptions() {
-      if (!this.teacherData?.actions) return {}
-      return {
-        tooltip: { trigger: 'item' },
-        legend: {
-          orient: 'vertical',
-          top: 'center',
-          right: 0,
-          data: this.teacherData.actions.map(item => item.name)
-        },
-        series: [{
-          type: 'pie',
-          radius: ['70%', '96%'],
-          left: 'center',
-          center: [40, 'center'],
-          data: this.teacherData.actions,
-          label: { show: false },
-          labelLine: { show: false },
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }]
-      }
-    },
-    teacherEmotionOptions() {
-      if (!this.studentData?.emotions) return {}
-      return {
-        tooltip: { trigger: 'item' },
-        legend: {
-          orient: 'vertical',
-          top: 'center',
-          right: 0,
-          data: this.studentData.emotions.map(item => item.name)
-        },
-        series: [{
-          type: 'pie',
-          radius: ['70%', '96%'],
-          left: 'center',
-          center: [40, 'center'],
-          data: this.studentData.emotions,
-          label: { show: false },
-          labelLine: { show: false },
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }]
-      }
-    },
-    speakingOptions() {
-      if (!this.topSpeakingCourses) return {}
-      return {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'line',
-            lineStyle: {
-              width: 26,
-              color: 'rgba(150,150,150,0.3)'
-            }
-          }
-        },
-        color: ['#71D1FD'],
-        xAxis: {
-          type: 'category',
-          name: '课程名',
-          nameGap: 1,
-          data: this.topSpeakingCourses.map(item => item.title),
-          axisLabel: {
-            rotate: 20,
-            interval: 0
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: '发言次数',
-          minInterval: 1,
-          min: 0
-        },
-        series: [{
-          data: this.topSpeakingCourses.map(item => item.num),
-          type: 'bar',
-          barWidth: 20
-        }]
-      }
-    },
-    engagementOptions() {
-      if (!this.topEngagementClasses) return {}
-      return {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'line',
-            lineStyle: {
-              width: 26,
-              color: 'rgba(150,150,150,0.3)'
-            }
-          }
-        },
-        color: ['#71D1FD'],
-        xAxis: {
-          type: 'category',
-          name: '班级名',
-          nameGap: 1,
-          data: this.topEngagementClasses.map(item => item.title),
-          axisLabel: {
-            rotate: 20,
-            interval: 0
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: '参与度/%',
-          minInterval: 1,
-          min: 0
-        },
-        series: [{
-          data: this.topEngagementClasses.map(item => parseFloat(item.num)),
-          type: 'bar',
-          barWidth: 20
-        }]
-      }
-    },
-    actionDistributionOptions() {
-      if (!this.classActionDistribution) return {}
-      return {
-        tooltip: { trigger: 'axis' },
-        legend: {
-          data: this.classActionDistribution.data.map(item => item.name)
-        },
-        xAxis: {
-          type: 'category',
-          data: this.classActionDistribution.classList,
-          axisLabel: {
-            rotate: 20,
-            interval: 0
-          }
-        },
-        yAxis: {
-          type: 'value',
-          splitNumber: 8
-        },
-        series: this.classActionDistribution.data
-      }
-    },
-    emotionDistributionOptions() {
-      if (!this.classEmotionDistribution) return {}
-      return {
-        tooltip: { trigger: 'axis' },
-        legend: {
-          data: this.classEmotionDistribution.data.map(item => item.name)
-        },
-        xAxis: {
-          type: 'category',
-          data: this.classEmotionDistribution.classList,
-          axisLabel: {
-            rotate: 20,
-            interval: 0
-          }
-        },
-        yAxis: {
-          type: 'value',
-          splitNumber: 8
-        },
-        series: this.classEmotionDistribution.data
-      }
-    },
-    courseTypeOptions() {
-      if (!this.courseTypes) return {}
-      return {
-        tooltip: { trigger: "item" },
-        legend: {
-          top: "5%",
-          left: "center",
-          textStyle: { color: "#333" }
-        },
-        series: [{
-          name: "学习类型",
-          type: "pie",
-          radius: ["45%", "60%"],
-          center: ['50%', '55%'],
-          avoidLabelOverlap: false,
-          label: {
-            show: true,
-            position: "outside",
-            formatter: (params) => `${params.name}: ${params.percent.toFixed(1)}%`,
-            color: '#333'
-          },
-          data: this.courseTypes
-        }],
-        color: ["#4a90e2", "#50e3c2", "#f5a623", "#ff4c4c"]
-      }
-    }
+    // studentActionOptions() {
+    //   console.log(886)
+    //   if (!this.studentData?.actions) return {}
+    //   return {
+    //     tooltip: { trigger: 'item' },
+    //     legend: {
+    //       orient: 'vertical',
+    //       top: 'center',
+    //       right: 0,
+    //       data: this.studentData.actions.map(item => item.name)
+    //     },
+    //     series: [{
+    //       type: 'pie',
+    //       radius: ['70%', '96%'],
+    //       left: 'center',
+    //       center: [40, 'center'],
+    //       data: this.studentData.actions,
+    //       label: { show: false },
+    //       labelLine: { show: false },
+    //       emphasis: {
+    //         itemStyle: {
+    //           shadowBlur: 10,
+    //           shadowOffsetX: 0,
+    //           shadowColor: 'rgba(0, 0, 0, 0.5)'
+    //         }
+    //       }
+    //     }]
+    //   }
+    // },
+    // teacherActionOptions() {
+    //   if (!this.teacherData?.actions) return {}
+    //   return {
+    //     tooltip: { trigger: 'item' },
+    //     legend: {
+    //       orient: 'vertical',
+    //       top: 'center',
+    //       right: 0,
+    //       data: this.teacherData.actions.map(item => item.name)
+    //     },
+    //     series: [{
+    //       type: 'pie',
+    //       radius: ['70%', '96%'],
+    //       left: 'center',
+    //       center: [40, 'center'],
+    //       data: this.teacherData.actions,
+    //       label: { show: false },
+    //       labelLine: { show: false },
+    //       emphasis: {
+    //         itemStyle: {
+    //           shadowBlur: 10,
+    //           shadowOffsetX: 0,
+    //           shadowColor: 'rgba(0, 0, 0, 0.5)'
+    //         }
+    //       }
+    //     }]
+    //   }
+    // },
+    // teacherEmotionOptions() {
+    //   if (!this.studentData?.emotions) return {}
+    //   return {
+    //     tooltip: { trigger: 'item' },
+    //     legend: {
+    //       orient: 'vertical',
+    //       top: 'center',
+    //       right: 0,
+    //       data: this.studentData.emotions.map(item => item.name)
+    //     },
+    //     series: [{
+    //       type: 'pie',
+    //       radius: ['70%', '96%'],
+    //       left: 'center',
+    //       center: [40, 'center'],
+    //       data: this.studentData.emotions,
+    //       label: { show: false },
+    //       labelLine: { show: false },
+    //       emphasis: {
+    //         itemStyle: {
+    //           shadowBlur: 10,
+    //           shadowOffsetX: 0,
+    //           shadowColor: 'rgba(0, 0, 0, 0.5)'
+    //         }
+    //       }
+    //     }]
+    //   }
+    // },
+    // speakingOptions() {
+    //   if (!this.topSpeakingCourses) return {}
+    //   return {
+    //     tooltip: {
+    //       trigger: 'axis',
+    //       axisPointer: {
+    //         type: 'line',
+    //         lineStyle: {
+    //           width: 26,
+    //           color: 'rgba(150,150,150,0.3)'
+    //         }
+    //       }
+    //     },
+    //     color: ['#71D1FD'],
+    //     xAxis: {
+    //       type: 'category',
+    //       name: '课程名',
+    //       nameGap: 1,
+    //       data: this.topSpeakingCourses.map(item => item.title),
+    //       axisLabel: {
+    //         rotate: 20,
+    //         interval: 0
+    //       }
+    //     },
+    //     yAxis: {
+    //       type: 'value',
+    //       name: '发言次数',
+    //       minInterval: 1,
+    //       min: 0
+    //     },
+    //     series: [{
+    //       data: this.topSpeakingCourses.map(item => item.num),
+    //       type: 'bar',
+    //       barWidth: 20
+    //     }]
+    //   }
+    // },
+    // engagementOptions() {
+    //   if (!this.topEngagementClasses) return {}
+    //   return {
+    //     tooltip: {
+    //       trigger: 'axis',
+    //       axisPointer: {
+    //         type: 'line',
+    //         lineStyle: {
+    //           width: 26,
+    //           color: 'rgba(150,150,150,0.3)'
+    //         }
+    //       }
+    //     },
+    //     color: ['#71D1FD'],
+    //     xAxis: {
+    //       type: 'category',
+    //       name: '班级名',
+    //       nameGap: 1,
+    //       data: this.topEngagementClasses.map(item => item.title),
+    //       axisLabel: {
+    //         rotate: 20,
+    //         interval: 0
+    //       }
+    //     },
+    //     yAxis: {
+    //       type: 'value',
+    //       name: '参与度/%',
+    //       minInterval: 1,
+    //       min: 0
+    //     },
+    //     series: [{
+    //       data: this.topEngagementClasses.map(item => parseFloat(item.num)),
+    //       type: 'bar',
+    //       barWidth: 20
+    //     }]
+    //   }
+    // },
+    // actionDistributionOptions() {
+    //   if (!this.classActionDistribution) return {}
+    //   return {
+    //     tooltip: { trigger: 'axis' },
+    //     legend: {
+    //       data: this.classActionDistribution.data.map(item => item.name)
+    //     },
+    //     xAxis: {
+    //       type: 'category',
+    //       data: this.classActionDistribution.classList,
+    //       axisLabel: {
+    //         rotate: 20,
+    //         interval: 0
+    //       }
+    //     },
+    //     yAxis: {
+    //       type: 'value',
+    //       splitNumber: 8
+    //     },
+    //     series: this.classActionDistribution.data
+    //   }
+    // },
+    // emotionDistributionOptions() {
+    //   if (!this.classEmotionDistribution) return {}
+    //   return {
+    //     tooltip: { trigger: 'axis' },
+    //     legend: {
+    //       data: this.classEmotionDistribution.data.map(item => item.name)
+    //     },
+    //     xAxis: {
+    //       type: 'category',
+    //       data: this.classEmotionDistribution.classList,
+    //       axisLabel: {
+    //         rotate: 20,
+    //         interval: 0
+    //       }
+    //     },
+    //     yAxis: {
+    //       type: 'value',
+    //       splitNumber: 8
+    //     },
+    //     series: this.classEmotionDistribution.data
+    //   }
+    // },
+    // courseTypeOptions() {
+    //   if (!this.courseTypes) return {}
+    //   return {
+    //     tooltip: { trigger: "item" },
+    //     legend: {
+    //       top: "5%",
+    //       left: "center",
+    //       textStyle: { color: "#333" }
+    //     },
+    //     series: [{
+    //       name: "学习类型",
+    //       type: "pie",
+    //       radius: ["45%", "60%"],
+    //       center: ['50%', '55%'],
+    //       avoidLabelOverlap: false,
+    //       label: {
+    //         show: true,
+    //         position: "outside",
+    //         formatter: (params) => `${params.name}: ${params.percent.toFixed(1)}%`,
+    //         color: '#333'
+    //       },
+    //       data: this.courseTypes
+    //     }],
+    //     color: ["#4a90e2", "#50e3c2", "#f5a623", "#ff4c4c"]
+    //   }
+    // }
   },
   async mounted() {
-    await this.initData()
+    // await this.initData();
   },
   methods: {
+    showChart() {},
+    getData() {
+      dzfb({}).then((res) => {
+        if (res) {
+          this.studentActionOptions.series[0].data = res;
+          var chart1 = echarts.init(document.getElementById("chart1"));
+          chart1.setOption(this.studentActionOptions);
+        } else {
+          this.$message.warning("请稍后重试");
+        }
+        this.loading = false;
+      });
+      jydz({}).then((res) => {
+        this.studentActionOptions.series[0].data = res;
+        var chart2 = echarts.init(document.getElementById("chart2"));
+        chart2.setOption(this.studentActionOptions);
+      });
+      fycs({}).then((res) => {
+        const xData = [];
+        const yData = [];
+
+        for (const [key, value] of Object.entries(res)) {
+          xData.push(key); // 课程名
+          yData.push(Number(value)); // 数量，确保转成数字
+        }
+        this.speakingOptions.xAxis.data = xData;
+        this.speakingOptions.series[0].data = yData;
+        var chart3 = echarts.init(document.getElementById("chart3"));
+        chart3.setOption(this.speakingOptions);
+      });
+      fyqs({}).then((res) => {
+        const xData = [];
+        const yData = [];
+
+        for (const [key, value] of Object.entries(res)) {
+          xData.push(key); // 课程名
+          yData.push(Number(value)); // 数量，确保转成数字
+        }
+        this.speakingOptions.xAxis.data = xData;
+        this.speakingOptions.series[0].data = yData;
+        var chart4 = echarts.init(document.getElementById("chart4"));
+        chart4.setOption(this.speakingOptions);
+      });
+    },
     goHome() {
-      this.$router.push('/')
+      this.$router.push("/");
     },
     async initData() {
       try {
         this.todayData = {
           ...this.todayData,
-          ...(await this.ten() || {})
-        }
-        this.studentData = studentData
-        this.teacherData = teacherData
-        this.classOverview = classOverview
-        this.classroomOverview = classroomOverview
-        this.courseTypes = courseTypes
-        this.topSpeakingCourses = topSpeakingCourses
-        this.topEngagementClasses = topEngagementClasses
-        this.classActionDistribution = classActionDistribution
-        this.classEmotionDistribution = classEmotionDistribution
+          ...((await this.ten()) || {}),
+        };
+        this.studentData = studentData;
+        this.teacherData = teacherData;
+        this.classOverview = classOverview;
+        this.classroomOverview = classroomOverview;
+        this.courseTypes = courseTypes;
+        this.topSpeakingCourses = topSpeakingCourses;
+        this.topEngagementClasses = topEngagementClasses;
+        this.classActionDistribution = classActionDistribution;
+        this.classEmotionDistribution = classEmotionDistribution;
       } catch (error) {
-        console.error('初始化数据失败:', error)
+        console.error("初始化数据失败:", error);
       }
     },
 
-    async ten() {
-      try {
-        const response = await fetch("http://localhost:8080/today/ten")
-        if (!response.ok) {
-          throw new Error("网络请求失败")
-        }
-        const data = await response.json()
+    // async ten() {
+    //   try {
+    //     const response = await fetch("http://localhost:8080/today/ten")
+    //     if (!response.ok) {
+    //       throw new Error("网络请求失败")
+    //     }
+    //     const data = await response.json()
 
-        // 只取需要的字段
-        return {
-          studentEngagementRate: data.studentEngagementRate || 0,
-          studentExcitementRate: data.studentExcitementRate || 0,
-          studentActivationRate: data.studentActivationRate || 0,
-        }
-      } catch (error) {
-        console.error('获取今日数据失败:', error)
-        return {
-          studentEngagementRate: 0,
-          studentExcitementRate: 0,
-          studentActivationRate: 0,
-        }
-      }
-    }
-  }
-}
+    //     // 只取需要的字段
+    //     return {
+    //       studentEngagementRate: data.studentEngagementRate || 0,
+    //       studentExcitementRate: data.studentExcitementRate || 0,
+    //       studentActivationRate: data.studentActivationRate || 0,
+    //     }
+    //   } catch (error) {
+    //     console.error('获取今日数据失败:', error)
+    //     return {
+    //       studentEngagementRate: 0,
+    //       studentExcitementRate: 0,
+    //       studentActivationRate: 0,
+    //     }
+    //   }
+    // }
+  },
+};
 </script>
 
 <style scoped>
@@ -612,7 +762,7 @@ export default {
 }
 
 .chart-title::after {
-  content: '';
+  content: "";
   position: absolute;
   height: 100%;
   width: 4px;
@@ -654,7 +804,7 @@ export default {
 }
 
 .overview-title::after {
-  content: '';
+  content: "";
   position: absolute;
   height: 100%;
   width: 4px;
