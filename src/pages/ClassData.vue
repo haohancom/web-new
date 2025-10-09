@@ -84,6 +84,18 @@
         </div>
       </a-card>
     </div>
+
+    <!-- 图表区域 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">学员动作分布</div>
+        <v-chart
+          id="studentActionChart"
+          :option="studentActionOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+    </div>
   </div>
 </template>
 
@@ -93,11 +105,14 @@ import { h } from 'vue'
 import moment from 'moment'
 import service from '@/utils/fetch'
 import { colorList } from "../services/mockData";
+import * as echarts from "echarts";
+import VChart from "vue-echarts";
 
 export default {
   name: 'ClassData',
   components: {
-    ArrowLeftOutlined
+    ArrowLeftOutlined,
+    VChart
   },
   data() {
     return {
@@ -113,6 +128,39 @@ export default {
       course: null,
       courseList: [],
       courseMapping: {}, // 存储课程名到courseId的映射
+      // 图表相关数据
+      studentActionOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "学员动作分布",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
+          },
+        ],
+      },
       columns: [
         {
           title: '班级名称',
@@ -246,6 +294,7 @@ export default {
         this.courseMapping = {}
         this.headupRate = 0
         this.classList = []
+        this.studentActionOptions.series[0].data = []
       }
     },
     onCourseChange(value) {
@@ -254,6 +303,7 @@ export default {
       // 重置抬头率和班级列表
       this.headupRate = 0
       this.classList = []
+      this.studentActionOptions.series[0].data = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -344,6 +394,9 @@ export default {
         // 获取班级列表
         await this.fetchClassList()
         
+        // 获取学员动作分布数据
+        await this.fetchStudentActionData()
+        
       } catch (error) {
         console.error('获取班级数据出错:', error)
         this.classData = {}
@@ -415,6 +468,51 @@ export default {
       } catch (error) {
         console.error('获取班级列表出错:', error)
         this.classList = []
+      }
+    },
+    // 获取学员动作分布数据
+    async fetchStudentActionData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/twentyNine',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的动作
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 更新图表数据
+        this.studentActionOptions.series[0].data = filteredData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('studentActionChart'))
+          if (chart) {
+            chart.setOption(this.studentActionOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取学员动作分布数据出错:', error)
+        this.studentActionOptions.series[0].data = []
       }
     },
     async loadClassData() {
@@ -599,5 +697,50 @@ export default {
     width: 100%;
     max-width: 300px;
   }
+}
+
+/* 图表网格样式 */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+  .chart-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: #f7f8fa;
+  border-radius: 10px;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  position: relative;
+  margin-bottom: 20px;
+  padding-left: 14px;
+}
+
+.chart-title::after {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 4px;
+  border-radius: 2px;
+  background: #1890ff;
+  left: 0;
+  top: 0;
 }
 </style>
