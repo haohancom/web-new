@@ -59,10 +59,15 @@
     </div>
 
     <!-- 班级信息区域 -->
-    <div class="class-info-section" v-if="classList.length > 0">
+    <div class="class-info-section" v-if="course">
       <div class="class-info-content">
-        当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
-        分别是<span class="class-names">{{ displayClassNames }}</span>
+        <span v-if="classList.length > 0">
+          当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
+          分别是<span class="class-names">{{ displayClassNames }}</span>
+        </span>
+        <span v-else>
+          当前时间段内，<span class="highlight">{{ course }}</span>班次无小班参与
+        </span>
       </div>
     </div>
 
