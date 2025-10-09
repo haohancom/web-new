@@ -95,6 +95,15 @@
           style="height: 280px"
         ></v-chart>
       </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">学员情绪分布</div>
+        <v-chart
+          id="studentEmotionChart"
+          :option="studentEmotionOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
     </div>
   </div>
 </template>
@@ -140,6 +149,39 @@ export default {
         series: [
           {
             name: "学员动作分布",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
+          },
+        ],
+      },
+      // 学员情绪分布图表
+      studentEmotionOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "学员情绪分布",
             type: "pie",
             radius: ["40%", "70%"],
             avoidLabelOverlap: false,
@@ -295,6 +337,7 @@ export default {
         this.headupRate = 0
         this.classList = []
         this.studentActionOptions.series[0].data = []
+        this.studentEmotionOptions.series[0].data = []
       }
     },
     onCourseChange(value) {
@@ -304,6 +347,7 @@ export default {
       this.headupRate = 0
       this.classList = []
       this.studentActionOptions.series[0].data = []
+      this.studentEmotionOptions.series[0].data = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -396,6 +440,9 @@ export default {
         
         // 获取学员动作分布数据
         await this.fetchStudentActionData()
+        
+        // 获取学员情绪分布数据
+        await this.fetchStudentEmotionData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -513,6 +560,51 @@ export default {
       } catch (error) {
         console.error('获取学员动作分布数据出错:', error)
         this.studentActionOptions.series[0].data = []
+      }
+    },
+    // 获取学员情绪分布数据
+    async fetchStudentEmotionData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/thirty',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的情绪
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 更新图表数据
+        this.studentEmotionOptions.series[0].data = filteredData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('studentEmotionChart'))
+          if (chart) {
+            chart.setOption(this.studentEmotionOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取学员情绪分布数据出错:', error)
+        this.studentEmotionOptions.series[0].data = []
       }
     },
     async loadClassData() {
