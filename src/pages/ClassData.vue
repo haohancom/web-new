@@ -111,6 +111,18 @@
       </a-card>
 
       <a-card class="chart-card">
+        <div class="chart-title">教员行为分布</div>
+        <v-chart
+          id="teacherBehaviorChart"
+          :option="teacherBehaviorOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+    </div>
+
+    <!-- 第二行图表区域 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
         <div class="chart-title">学员类型分析</div>
         <v-chart
           id="studentTypeChart"
@@ -238,6 +250,39 @@ export default {
           {
             data: [],
             type: "bar",
+          },
+        ],
+      },
+      // 教员行为分布图表
+      teacherBehaviorOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "教员行为分布",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
           },
         ],
       },
@@ -381,6 +426,7 @@ export default {
         this.studentEmotionOptions.series[0].data = []
         this.studentTypeOptions.xAxis.data = []
         this.studentTypeOptions.series[0].data = []
+        this.teacherBehaviorOptions.series[0].data = []
       }
     },
     onCourseChange(value) {
@@ -393,6 +439,7 @@ export default {
       this.studentEmotionOptions.series[0].data = []
       this.studentTypeOptions.xAxis.data = []
       this.studentTypeOptions.series[0].data = []
+      this.teacherBehaviorOptions.series[0].data = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -491,6 +538,9 @@ export default {
         
         // 获取学员类型分析数据
         await this.fetchStudentTypeData()
+        
+        // 获取教员行为分布数据
+        await this.fetchTeacherBehaviorData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -704,6 +754,51 @@ export default {
         console.error('获取学员类型分析数据出错:', error)
         this.studentTypeOptions.xAxis.data = []
         this.studentTypeOptions.series[0].data = []
+      }
+    },
+    // 获取教员行为分布数据
+    async fetchTeacherBehaviorData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/thirtySeven',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的行为
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 更新图表数据
+        this.teacherBehaviorOptions.series[0].data = filteredData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('teacherBehaviorChart'))
+          if (chart) {
+            chart.setOption(this.teacherBehaviorOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取教员行为分布数据出错:', error)
+        this.teacherBehaviorOptions.series[0].data = []
       }
     },
     async loadClassData() {
