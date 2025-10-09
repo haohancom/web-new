@@ -63,7 +63,7 @@
       <div class="class-info-content">
         <span v-if="classList.length > 0">
           当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
-          分别是<span class="class-names">{{ displayClassNames }}</span>
+          参与班级为: <span class="class-names">{{ displayClassNames }}</span>
         </span>
         <span v-else>
           当前时间段内，<span class="highlight">{{ course }}</span>班次无小班参与
@@ -381,11 +381,6 @@ export default {
             ? `${Number(this.classData.studentActivationRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[4],
-        },
-        {
-          label: "课程数",
-          num: this.studentData?.courses || 0,
-          color: colorList[5],
         },
       ];
     },
