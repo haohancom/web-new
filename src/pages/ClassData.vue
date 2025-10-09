@@ -104,6 +104,15 @@
           style="height: 280px"
         ></v-chart>
       </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">学员类型分析</div>
+        <v-chart
+          id="studentTypeChart"
+          :option="studentTypeOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
     </div>
   </div>
 </template>
@@ -200,6 +209,30 @@ export default {
               show: false,
             },
             data: [],
+          },
+        ],
+      },
+      // 学员类型分析柱状图
+      studentTypeOptions: {
+        tooltip: {
+          trigger: "axis",
+        },
+        xAxis: {
+          axisLabel: {
+            interval: 0, // 强制显示所有标签
+            rotate: 45, // 倾斜45°
+            fontSize: 12,
+          },
+          type: "category",
+          data: [],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            data: [],
+            type: "bar",
           },
         ],
       },
@@ -338,6 +371,8 @@ export default {
         this.classList = []
         this.studentActionOptions.series[0].data = []
         this.studentEmotionOptions.series[0].data = []
+        this.studentTypeOptions.xAxis.data = []
+        this.studentTypeOptions.series[0].data = []
       }
     },
     onCourseChange(value) {
@@ -348,6 +383,8 @@ export default {
       this.classList = []
       this.studentActionOptions.series[0].data = []
       this.studentEmotionOptions.series[0].data = []
+      this.studentTypeOptions.xAxis.data = []
+      this.studentTypeOptions.series[0].data = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -443,6 +480,9 @@ export default {
         
         // 获取学员情绪分布数据
         await this.fetchStudentEmotionData()
+        
+        // 获取学员类型分析数据
+        await this.fetchStudentTypeData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -605,6 +645,57 @@ export default {
       } catch (error) {
         console.error('获取学员情绪分布数据出错:', error)
         this.studentEmotionOptions.series[0].data = []
+      }
+    },
+    // 获取学员类型分析数据
+    async fetchStudentTypeData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/thirtyFive',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值并提取name和value
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 提取x轴数据（name）和y轴数据（value）
+        const xData = filteredData.map(item => item.name)
+        const yData = filteredData.map(item => Number(item.value))
+        
+        // 更新图表数据
+        this.studentTypeOptions.xAxis.data = xData
+        this.studentTypeOptions.series[0].data = yData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('studentTypeChart'))
+          if (chart) {
+            chart.setOption(this.studentTypeOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取学员类型分析数据出错:', error)
+        this.studentTypeOptions.xAxis.data = []
+        this.studentTypeOptions.series[0].data = []
       }
     },
     async loadClassData() {
