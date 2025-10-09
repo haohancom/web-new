@@ -361,6 +361,9 @@ export default {
         this.course = null
         this.courseList = []
         this.courseMapping = {}
+      } else if (this.startDate && this.endDate) {
+        // 如果两个日期都存在，重新获取课程列表
+        this.fetchCourseList()
       }
     },
     onEndDateChange(date) {
