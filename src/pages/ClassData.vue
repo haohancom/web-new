@@ -130,6 +130,15 @@
           style="height: 280px"
         ></v-chart>
       </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">课堂类型</div>
+        <v-chart
+          id="classroomTypeChart"
+          :option="classroomTypeOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
     </div>
   </div>
 </template>
@@ -286,6 +295,209 @@ export default {
           },
         ],
       },
+      // 课堂类型图表
+      classroomTypeOptions: {
+        title: {
+          text: "课堂类型分布图",
+          left: "center",
+          top: "5%",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "#333"
+          },
+        },
+        xAxis: {
+          name: "(RT)",
+          nameLocation: "middle",
+          nameGap: 25,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: function (params) {
+            return `课程：${params.name}<br/> RT: ${params.value[0].toFixed(2)}<br/>CH: ${params.value[1].toFixed(2)}`;
+          },
+        },
+        yAxis: {
+          name: "(Ch)",
+          nameLocation: "middle",
+          nameGap: 35,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        grid: {
+          left: "8%",
+          right: "5%",
+          bottom: "12%",
+          top: "15%",
+          containLabel: true,
+        },
+        series: [
+          {
+            type: "scatter",
+            data: [],
+            symbolSize: 12,
+            label: {
+              show: true,
+              formatter: "{b}",
+              position: "top",
+            },
+            itemStyle: {
+              color: "#ff8800",
+            },
+          },
+          // === 主三角形边框 ===
+          {
+            type: "line",
+            data: [
+              [0, 0],
+              [0.5, 1],
+              [1, 0],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 左侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0],
+              [0.3, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 右侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.7, 0],
+              [0.7, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 中间横线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0.5],
+              [0.7, 0.5],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+        ],
+        graphic: [
+          // === 区域文字 ===
+          {
+            type: "text",
+            left: "22%",
+            top: "72%",
+            style: {
+              text: "练习型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "72%",
+            style: {
+              text: "混合型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "72%",
+            top: "72%",
+            style: {
+              text: "讲授型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "40%",
+            style: {
+              text: "对话型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+        ],
+      },
       columns: [
         {
           title: '班级名称',
@@ -422,6 +634,7 @@ export default {
         this.studentTypeOptions.xAxis.data = []
         this.studentTypeOptions.series[0].data = []
         this.teacherBehaviorOptions.series[0].data = []
+        this.classroomTypeOptions.series[0].data = []
       }
     },
     onCourseChange(value) {
@@ -435,6 +648,7 @@ export default {
       this.studentTypeOptions.xAxis.data = []
       this.studentTypeOptions.series[0].data = []
       this.teacherBehaviorOptions.series[0].data = []
+      this.classroomTypeOptions.series[0].data = []
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -536,6 +750,9 @@ export default {
         
         // 获取教员行为分布数据
         await this.fetchTeacherBehaviorData()
+        
+        // 获取课堂类型数据
+        await this.fetchClassroomTypeData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -794,6 +1011,65 @@ export default {
       } catch (error) {
         console.error('获取教员行为分布数据出错:', error)
         this.teacherBehaviorOptions.series[0].data = []
+      }
+    },
+    // 获取课堂类型数据
+    async fetchClassroomTypeData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/twentyEight',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        // 处理响应数据，创建散点图数据
+        if (response && response.rt !== undefined && response.ch !== undefined) {
+          const scatterData = [{
+            name: this.course, // 使用选择的课程名
+            value: [response.rt, response.ch] // [RT值, CH值]
+          }]
+          
+          // 更新图表数据
+          this.classroomTypeOptions.series[0].data = scatterData
+          
+          // 手动更新图表
+          this.$nextTick(() => {
+            const chart = echarts.init(document.getElementById('classroomTypeChart'))
+            if (chart) {
+              chart.setOption(this.classroomTypeOptions)
+            }
+          })
+        } else {
+          // 如果没有数据，显示空图表
+          this.classroomTypeOptions.series[0].data = []
+          this.$nextTick(() => {
+            const chart = echarts.init(document.getElementById('classroomTypeChart'))
+            if (chart) {
+              chart.setOption(this.classroomTypeOptions)
+            }
+          })
+        }
+        
+      } catch (error) {
+        console.error('获取课堂类型数据出错:', error)
+        this.classroomTypeOptions.series[0].data = []
       }
     },
     async loadClassData() {
