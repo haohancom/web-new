@@ -80,3 +80,12 @@ export function dzfb(params) {
       params
     })
   }
+
+  //课堂类型数据
+  export function twentyOne(params) {
+    return request({
+      url: '/today/twentyOne',
+      method: 'get',
+      params
+    })
+  }

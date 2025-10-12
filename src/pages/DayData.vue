@@ -143,7 +143,7 @@ import * as echarts from "echarts";
 import { h } from "vue";
 import VChart from "vue-echarts";
 import { colorList } from "../services/mockData";
-import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx } from "@/api/dayData";
+import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx, twentyOne } from "@/api/dayData";
 import { xscq } from "../api/dayData";
 
 export default {
@@ -735,24 +735,29 @@ this.headupRate = avg.toFixed(2) + "%"
     showLessonsType() {
       const chart = echarts.init(document.getElementById("typeChart"));
 
-      const rawData = [
-        ["数学", 0.1, 0.3],
-        ["语文", 0.3, 0.4],
-        ["物理", 0.6, 0.7],
-        ["化学", 0.8, 0.6],
-        ["生物", 0.4, 0.5],
-        ["历史", 0.2, 0.3],
-        ["地理", 0.5, 0.4],
-        ["政治", 0.7, 0.9],
-        ["英语", 0.5, 0.8],
-      ];
-      const scatterData = rawData.map((item) => ({
-        name: item[0],
-        value: [item[1], item[2]],
-      }));
-      this.TypeOptions.series[0].data = scatterData;
-
-      chart.setOption(this.TypeOptions);
+      // 调用真实接口获取数据
+      twentyOne({}).then((res) => {
+        if (res && res.length > 0) {
+          // 将接口返回的数据转换为散点图格式
+          const scatterData = res.map((item) => ({
+            name: item[0],      // 课程名称
+            value: [item[1], item[2]], // [RT值, CH值]
+          }));
+          
+          // 更新图表数据
+          this.TypeOptions.series[0].data = scatterData;
+          chart.setOption(this.TypeOptions);
+        } else {
+          // 如果没有数据，显示空图表
+          this.TypeOptions.series[0].data = [];
+          chart.setOption(this.TypeOptions);
+        }
+      }).catch((error) => {
+        console.error("获取课堂类型数据失败:", error);
+        // 接口调用失败时，显示空图表
+        this.TypeOptions.series[0].data = [];
+        chart.setOption(this.TypeOptions);
+      });
     },
     async initData() {
       try {
