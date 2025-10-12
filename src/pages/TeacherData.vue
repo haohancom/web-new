@@ -58,6 +58,19 @@
       </div>
     </div>
 
+    <!-- 教员班级信息区域 -->
+    <div class="teacher-info-section" v-if="teacher">
+      <div class="teacher-info-content">
+        <span v-if="teacherClassList.length > 0">
+          当前时间段内，<span class="highlight">{{ teacher }}</span>老师共教授<span class="highlight">{{ teacherClassList.length }}</span>个小班，
+          教授班级为: <span class="class-names">{{ displayTeacherClassNames }}</span>
+        </span>
+        <span v-else>
+          当前时间段内，<span class="highlight">{{ teacher }}</span>老师无教授班级
+        </span>
+      </div>
+    </div>
+
     <!-- 顶部数据卡片 -->
     <div class="data-grid">
       <a-card
@@ -104,11 +117,31 @@ export default {
       teacherDetail: {},
       // 教员抬头率数据
       headupRate: 0,
+      // 教员教授班级列表
+      teacherClassList: [],
     }
   },
   computed: {
     canSelectTeacher() {
       return this.startDate && this.endDate
+    },
+    displayTeacherClassNames() {
+      if (!this.teacherClassList || this.teacherClassList.length === 0) {
+        return ''
+      }
+      
+      // 最多显示10个班级名
+      const displayClasses = this.teacherClassList.slice(0, 10)
+      let result = displayClasses.join('小班、')
+      
+      // 如果超过10个，添加省略号
+      if (this.teacherClassList.length > 10) {
+        result += '小班等'
+      } else {
+        result += '小班'
+      }
+      
+      return result
     },
     numList() {
       return [
@@ -255,6 +288,9 @@ export default {
         // 获取教员抬头率数据
         await this.fetchTeacherHeadupRate()
         
+        // 获取教员教授班级列表
+        await this.fetchTeacherClassList()
+        
       } catch (error) {
         console.error('获取教员数据出错:', error)
         this.teacherDetail = {}
@@ -292,6 +328,40 @@ export default {
       } catch (error) {
         console.error('获取教员抬头率出错:', error)
         this.headupRate = 0
+      }
+    },
+    // 获取教员教授班级列表
+    async fetchTeacherClassList() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortyTwo',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 更新教员教授班级列表数据
+        this.teacherClassList = Array.isArray(response) ? response : []
+        
+      } catch (error) {
+        console.error('获取教员教授班级列表出错:', error)
+        this.teacherClassList = []
       }
     }
   }
@@ -357,6 +427,32 @@ export default {
 
 .teacher-select {
   min-width: 200px;
+}
+
+/* 教员班级信息区域样式 */
+.teacher-info-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #1890ff;
+}
+
+.teacher-info-content {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.highlight {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.class-names {
+  color: #666;
+  font-weight: 500;
 }
 
 /* 响应式设计 */

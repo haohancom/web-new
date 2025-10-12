@@ -119,6 +119,15 @@ import request from '@/utils/fetch'
     })
   }
 
+  //获取教员教授班级列表
+  export function getTeacherClassList(params) {
+    return request({
+      url: '/teacherData/fortyTwo',
+      method: 'get',
+      params
+    })
+  }
+
   //获取学员班级抬头率数据
   export function getStudentClassHeadupRate(params) {
     return request({
