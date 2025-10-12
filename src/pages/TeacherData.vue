@@ -109,7 +109,7 @@
       </a-card>
     </div>
 
-    <!-- 发言次数前十课程柱状图 -->
+    <!-- 发言次数前十课程柱状图和教员行为分布图 -->
     <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">发言次数前十课程</div>
@@ -119,9 +119,18 @@
           style="height: 350px"
         ></v-chart>
       </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">教员行为分布</div>
+        <v-chart
+          id="teacherBehaviorChart"
+          :option="teacherBehaviorOptions"
+          style="height: 350px"
+        ></v-chart>
+      </a-card>
     </div>
 
-    <!-- 课程散点图 -->
+    <!-- 课堂类型图和我的行为动作分布图 -->
     <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">课堂类型</div>
@@ -131,25 +140,13 @@
           style="height: 350px"
         ></v-chart>
       </a-card>
-    </div>
-
-    <!-- 教员行为分布图表 -->
-    <div class="chart-grid">
-      <a-card class="chart-card">
-        <div class="chart-title">教员行为分布</div>
-        <v-chart
-          id="teacherBehaviorChart"
-          :option="teacherBehaviorOptions"
-          style="height: 280px"
-        ></v-chart>
-      </a-card>
 
       <a-card class="chart-card">
         <div class="chart-title">我的行为动作分布</div>
         <v-chart
           id="myBehaviorChart"
           :option="myBehaviorOptions"
-          style="height: 280px"
+          style="height: 350px"
         ></v-chart>
       </a-card>
     </div>
