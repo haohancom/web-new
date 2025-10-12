@@ -131,8 +131,7 @@
       <a-card class="overview-card">
         <div class="overview-title">课堂类型</div>
         <div style="padding: 20px">
-          <!-- <v-chart :option="courseTypeOptions" style="height: 280px" /> -->
-        </div>
+          <v-chart id="typeChart" :option="TypeOptions" style="height:300px;width:100%"/>        </div>
       </a-card>
     </div>
   </div>
@@ -278,6 +277,209 @@ export default {
       },
       emotionDistributionOptions: {},
       courseTypeOptions: {},
+      TypeOptions: {
+        title: {
+          text: "课堂类型分布图",
+          left: "center",
+          top: "5%",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "#333"
+          },
+        },
+        xAxis: {
+          name: "(RT)",
+          nameLocation: "middle",
+          nameGap: 25,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        tooltip: {
+          trigger: 'item', // 触发类型：item表示对单个点触发
+          formatter: function (params) {
+            // params.value 是 [x, y]
+            return `课程：${params.name}<br/> RT: ${params.value[0].toFixed(2)}<br/>CH: ${params.value[1].toFixed(2)}`;
+          },
+        },
+        yAxis: {
+          name: "(Ch)",
+          nameLocation: "middle",
+          nameGap: 35,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        grid: {
+          left: "8%",
+          right: "5%",
+          bottom: "12%",
+          top: "15%",
+          containLabel: true,
+        },
+        series: [
+          {
+            type: "scatter",
+            data: [],
+            symbolSize: 12,
+            label: {
+              show: true,
+              formatter: "{b}",
+              position: "top",
+            },
+            itemStyle: {
+              color: "#ff8800",
+            },
+          },
+          // === 主三角形边框 ===
+          {
+            type: "line",
+            data: [
+              [0, 0],
+              [0.5, 1],
+              [1, 0],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false } // 关闭此系列的 tooltip
+          },
+          // === 左侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0],
+              [0.3, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false } // 关闭此系列的 tooltip
+          },
+          // === 右侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.7, 0],
+              [0.7, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false } // 关闭此系列的 tooltip
+          },
+          // === 中间横线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0.5],
+              [0.7, 0.5],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false } // 关闭此系列的 tooltip
+          },
+        ],
+        graphic: [
+          // === 区域文字 ===
+          {
+            type: "text",
+            left: "22%",
+            top: "72%",
+            style: {
+              text: "练习型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "72%",
+            style: {
+              text: "混合型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "72%",
+            top: "72%",
+            style: {
+              text: "讲授型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "40%",
+            style: {
+              text: "对话型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+        ],
+      },
       todayData: {},
       studentData: {},
       teacherData: {},
@@ -605,6 +807,7 @@ export default {
   },
   async mounted() {
     // await this.initData();
+    this.showLessonsType();
   },
   methods: {
     showChart() {},
@@ -755,6 +958,29 @@ this.headupRate = avg.toFixed(2) + "%"
     },
     goHome() {
       this.$router.push("/");
+    },
+    showLessonsType() {
+      const chart = echarts.init(document.getElementById("typeChart"));
+
+      const rawData = [
+        ["数学", 0.1, 0.3],
+        ["语文", 0.3, 0.4],
+        ["物理", 0.6, 0.7],
+        ["化学", 0.8, 0.6],
+        ["生物", 0.4, 0.5],
+        ["历史", 0.2, 0.3],
+        ["地理", 0.5, 0.4],
+        ["政治", 0.7, 0.9],
+        ["英语", 0.5, 0.8],
+      ];
+      const scatterData = rawData.map((item) => ({
+        name: item[0],
+        value: [item[1], item[2]],
+      }));
+      console.log(scatterData);
+      this.TypeOptions.series[0].data = scatterData;
+
+      chart.setOption(this.TypeOptions);
     },
     async initData() {
       try {
