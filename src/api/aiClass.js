@@ -128,6 +128,42 @@ import request from '@/utils/fetch'
     })
   }
 
+  //获取教员学员情绪分布数据
+  export function getTeacherStudentEmotion(params) {
+    return request({
+      url: '/teacherData/fortyThree',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取教员学员动作分布数据
+  export function getTeacherStudentAction(params) {
+    return request({
+      url: '/teacherData/fortyFour',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取学员班级学员动作分布数据
+  export function getStudentClassAction(params) {
+    return request({
+      url: '/studentClass/fiftySix',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取学员班级学员情绪分布数据
+  export function getStudentClassEmotion(params) {
+    return request({
+      url: '/studentClass/fiftySeven',
+      method: 'get',
+      params
+    })
+  }
+
   //获取学员班级抬头率数据
   export function getStudentClassHeadupRate(params) {
     return request({
