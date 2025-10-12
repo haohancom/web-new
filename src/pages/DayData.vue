@@ -222,7 +222,7 @@ export default {
           trigger: "axis",
         },
         legend: {
-          data: ["快乐", "悲伤", "惊讶", "厌恶"],
+          data: [], // 动态设置，避免固定数据导致的警告
         },
         grid: {
           left: "3%",
@@ -248,32 +248,7 @@ export default {
         yAxis: {
           type: "value",
         },
-        series: [
-          {
-            name: "快乐",
-            type: "line",
-
-            data: [120, 132, 101, 134],
-          },
-          {
-            name: "悲伤",
-            type: "line",
-
-            data: [220, 182, 191, 234, 290],
-          },
-          {
-            name: "惊讶",
-            type: "line",
-
-            data: [150, 232, 201, 154, 190],
-          },
-          {
-            name: "厌恶",
-            type: "line",
-
-            data: [320, 332, 301, 334, 390],
-          },
-        ],
+        series: [], // 动态设置，避免固定数据导致的警告
       },
       emotionDistributionOptions: {},
       courseTypeOptions: {},
@@ -887,51 +862,79 @@ this.headupRate = avg.toFixed(2) + "%"
 
        //参与度前十动作分布
       cydz({}).then((res) => {
-        const courseNames = Object.keys(res); // 
+        if (Object.keys(res).length !== 0) {
+          const courseNames = Object.keys(res); // 
 
-        // 2️⃣ 动作名（假设各课程动作一致）
-        const actions = res[courseNames[0]].map((item) => item.action);
+          // 2️⃣ 动作名（假设各课程动作一致）
+          const actions = res[courseNames[0]].map((item) => item.action);
 
-        // 3️⃣ 生成 series 数组
-        const seriesData = actions.map((action) => {
-          return {
-            name: action,
-            type: "line",
-            data: courseNames.map((course) => {
-              const found = res[course].find((i) => i.action === action);
-              return found ? found.count : 0;
-            }),
+          // 3️⃣ 生成 series 数组
+          const seriesData = actions.map((action) => {
+            return {
+              name: action,
+              type: "line",
+              data: courseNames.map((course) => {
+                const found = res[course].find((i) => i.action === action);
+                return found ? found.count : 0;
+              }),
+            };
+          });
+          
+          // 创建独立的配置对象，避免修改共享的配置
+          const chart5Options = {
+            ...this.actionDistributionOptions,
+            xAxis: {
+              ...this.actionDistributionOptions.xAxis,
+              data: courseNames
+            },
+            series: seriesData,
+            legend: {
+              data: actions // 使用实际的action名称作为legend数据
+            }
           };
-        });
-        this.actionDistributionOptions.xAxis.data = courseNames
-        this.actionDistributionOptions.series = seriesData
-         var chart5 = echarts.init(document.getElementById("chart5"));
-        chart5.setOption(this.actionDistributionOptions);
+          
+          var chart5 = echarts.init(document.getElementById("chart5"));
+          chart5.setOption(chart5Options);
+        }
       });
 
       
        //兴奋度前十情绪分布
       xfqx({}).then((res) => {
-        const courseNames = Object.keys(res); // 
+        if (Object.keys(res).length !== 0) {
+          const courseNames = Object.keys(res); // 
 
-        // 2️⃣ 动作名（假设各课程动作一致）
-        const emotion = res[courseNames[0]].map((item) => item.emotion);
+          // 2️⃣ 情绪名（假设各课程情绪一致）
+          const emotions = res[courseNames[0]].map((item) => item.emotion);
 
-        // 3️⃣ 生成 series 数组
-        const seriesData = emotion.map((emotion) => {
-          return {
-            name: emotion,
-            type: "line",
-            data: courseNames.map((course) => {
-              const found = res[course].find((i) => i.emotion === emotion);
-              return found ? found.count : 0;
-            }),
+          // 3️⃣ 生成 series 数组
+          const seriesData = emotions.map((emotion) => {
+            return {
+              name: emotion,
+              type: "line",
+              data: courseNames.map((course) => {
+                const found = res[course].find((i) => i.emotion === emotion);
+                return found ? found.count : 0;
+              }),
+            };
+          });
+          
+          // 创建独立的配置对象，避免修改共享的配置
+          const chart6Options = {
+            ...this.actionDistributionOptions,
+            xAxis: {
+              ...this.actionDistributionOptions.xAxis,
+              data: courseNames
+            },
+            series: seriesData,
+            legend: {
+              data: emotions // 使用实际的emotion名称作为legend数据
+            }
           };
-        });
-        this.actionDistributionOptions.xAxis.data = courseNames
-        this.actionDistributionOptions.series = seriesData
-         var chart6 = echarts.init(document.getElementById("chart6"));
-        chart6.setOption(this.actionDistributionOptions);
+          
+          var chart6 = echarts.init(document.getElementById("chart6"));
+          chart6.setOption(chart6Options);
+        }
       });
 
       
