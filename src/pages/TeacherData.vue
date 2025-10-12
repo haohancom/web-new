@@ -109,13 +109,25 @@
       </a-card>
     </div>
 
-    <!-- 发言次数前十班级柱状图 -->
+    <!-- 发言次数前十课程柱状图 -->
     <div class="chart-grid">
       <a-card class="chart-card">
-        <div class="chart-title">发言次数前十班级</div>
+        <div class="chart-title">发言次数前十课程</div>
         <v-chart
           id="teacherClassSpeakingChart"
           :option="classSpeakingOptions"
+          style="height: 350px"
+        ></v-chart>
+      </a-card>
+    </div>
+
+    <!-- 课程散点图 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">课堂类型</div>
+        <v-chart
+          id="teacherCourseScatterChart"
+          :option="courseScatterOptions"
           style="height: 350px"
         ></v-chart>
       </a-card>
@@ -261,6 +273,213 @@ export default {
               itemStyle: {
                 color: "#40a9ff",
               },
+            },
+          },
+        ],
+      },
+      courseScatterOptions: {
+        title: {
+          text: "课堂类型分布图",
+          left: "center",
+          top: "5%",
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "#333"
+          },
+        },
+        xAxis: {
+          name: "(RT)",
+          nameLocation: "middle",
+          nameGap: 25,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: function (params) {
+            if (params.seriesType === 'scatter') {
+              return `课程：${params.data.courseName}<br/>上课时间：${params.data.classDate}<br/>RT: ${params.value[0].toFixed(2)}<br/>CH: ${params.value[1].toFixed(2)}`;
+            }
+            return '';
+          },
+        },
+        yAxis: {
+          name: "(Ch)",
+          nameLocation: "middle",
+          nameGap: 35,
+          nameTextStyle: {
+            fontSize: 12,
+            color: "#666",
+            fontWeight: "bold"
+          },
+          min: 0,
+          max: 1,
+          type: "value",
+          axisLabel: { 
+            show: true,
+            fontSize: 10,
+            color: "#666"
+          },
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: "#ddd"
+            }
+          },
+          splitLine: { 
+            show: true,
+            lineStyle: {
+              color: "#f0f0f0",
+              type: "dashed"
+            }
+          },
+        },
+        grid: {
+          left: "8%",
+          right: "5%",
+          bottom: "12%",
+          top: "15%",
+          containLabel: true,
+        },
+        series: [
+          {
+            type: "scatter",
+            data: [],
+            symbolSize: 12,
+            label: {
+              show: true,
+              formatter: function(params) {
+                return params.data.courseName;
+              },
+              position: "top",
+            },
+            itemStyle: {
+              color: "#ff8800",
+            },
+          },
+          // === 主三角形边框 ===
+          {
+            type: "line",
+            data: [
+              [0, 0],
+              [0.5, 1],
+              [1, 0],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 左侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0],
+              [0.3, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 右侧分界线 ===
+          {
+            type: "line",
+            data: [
+              [0.7, 0],
+              [0.7, 0.6],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+          // === 中间横线 ===
+          {
+            type: "line",
+            data: [
+              [0.3, 0.5],
+              [0.7, 0.5],
+            ],
+            lineStyle: {
+              color: "green",
+              width: 2,
+            },
+            symbol: "none",
+            tooltip: { show: false }
+          },
+        ],
+        graphic: [
+          // === 区域文字 ===
+          {
+            type: "text",
+            left: "22%",
+            top: "72%",
+            style: {
+              text: "练习型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "72%",
+            style: {
+              text: "混合型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "72%",
+            top: "72%",
+            style: {
+              text: "讲授型",
+              fill: "#333",
+              fontSize: 14,
+            },
+          },
+          {
+            type: "text",
+            left: "50%",
+            top: "40%",
+            style: {
+              text: "对话型",
+              fill: "#333",
+              fontSize: 14,
             },
           },
         ],
@@ -443,8 +662,11 @@ export default {
         // 获取学员情绪分布数据
         await this.fetchTeacherStudentEmotionData()
         
-        // 获取发言次数前十班级数据
+        // 获取发言次数前十课程数据
         await this.fetchTeacherClassSpeakingData()
+        
+        // 获取课程散点图数据
+        await this.fetchTeacherCourseScatterData()
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
@@ -609,7 +831,7 @@ export default {
         this.studentEmotionOptions.series[0].data = []
       }
     },
-    // 获取教员发言次数前十班级数据
+    // 获取教员发言次数前十课程数据
     async fetchTeacherClassSpeakingData() {
       if (!this.startDate || !this.endDate || !this.teacher) {
         return
@@ -664,9 +886,65 @@ export default {
         })
         
       } catch (error) {
-        console.error('获取教员发言次数前十班级数据出错:', error)
+        console.error('获取教员发言次数前十课程数据出错:', error)
         this.classSpeakingOptions.xAxis.data = []
         this.classSpeakingOptions.series[0].data = []
+      }
+    },
+    // 获取教员课程散点图数据
+    async fetchTeacherCourseScatterData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortySix',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 处理响应数据：[["医用化学",0.0,0.0,"2025-03-05"],["医用化学",0.0,0.0,"2025-03-07"],...]
+        let scatterData = []
+        if (Array.isArray(response)) {
+          scatterData = response.map(item => {
+            // item格式：[课程名, RT, CH, 上课日期]
+            const [courseName, rt, ch, classDate] = item
+            return {
+              courseName: courseName,
+              classDate: classDate,
+              value: [Number(rt), Number(ch)]
+            }
+          })
+        }
+        
+        // 更新图表数据
+        this.courseScatterOptions.series[0].data = scatterData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('teacherCourseScatterChart'))
+          if (chart) {
+            chart.setOption(this.courseScatterOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取教员课程散点图数据出错:', error)
+        this.courseScatterOptions.series[0].data = []
       }
     }
   }
