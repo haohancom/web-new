@@ -37,6 +37,12 @@ export default {
   data() {
     return {
       navButtons: [
+         {
+          key: 'aiClass',
+          icon: CalendarOutlined,
+          text: 'AI课堂',
+          route: '/aiClass'
+        },
         {
           key: 'dayData',
           icon: CalendarOutlined,

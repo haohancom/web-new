@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "vue": "^2.7.14",
-    "vue-router": "^3.6.5",
     "ant-design-vue": "^1.7.8",
     "axios": "^1.6.2",
     "echarts": "^5.4.3",
-    "vue-echarts": "^6.6.1"
+    "element-ui": "^2.15.14",
+    "vue": "^2.7.14",
+    "vue-echarts": "^6.6.1",
+    "vue-router": "^3.6.5",
+    "vxe-table": "^3.6.13",
+    "xe-utils": "^3.7.9"
   },
   "scripts": {
     "serve": "vue-cli-service serve",

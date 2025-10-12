@@ -1,5 +1,5 @@
 
-const BASE_URL = 'http://192.168.6.164:8080'
+const BASE_URL = 'http://localhost:8080'
 import qs from 'qs';
 // import fileDownload from "js-file-download";
 function service(request) {

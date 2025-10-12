@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import HomePage from '../pages/HomePage.vue'
+import AiClass from '../pages/AiClass.vue'
 import DayData from '../pages/DayData.vue'
 import ClassData from '../pages/ClassData.vue'
 import TeacherData from '../pages/TeacherData.vue'
@@ -20,6 +21,11 @@ const routes = [
     path: '/home',
     name: 'HomePage',
     component: HomePage
+  },
+    {
+    path: '/aiClass',
+    name: 'AiClass',
+    component: AiClass
   },
   {
     path: '/dayData',
