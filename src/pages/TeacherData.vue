@@ -133,6 +133,27 @@
       </a-card>
     </div>
 
+    <!-- 教员行为分布图表 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">教员行为分布</div>
+        <v-chart
+          id="teacherBehaviorChart"
+          :option="teacherBehaviorOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">我的行为动作分布</div>
+        <v-chart
+          id="myBehaviorChart"
+          :option="myBehaviorOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+    </div>
+
   </div>
 </template>
 
@@ -484,6 +505,72 @@ export default {
           },
         ],
       },
+      // 教员行为分布图表
+      teacherBehaviorOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "教员行为分布",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
+          },
+        ],
+      },
+      // 我的行为动作分布图表
+      myBehaviorOptions: {
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "我的行为动作分布",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
+          },
+        ],
+      },
     }
   },
   computed: {
@@ -667,6 +754,9 @@ export default {
         
         // 获取课程散点图数据
         await this.fetchTeacherCourseScatterData()
+        
+        // 获取教员行为分布数据
+        await this.fetchTeacherBehaviorData()
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
@@ -945,6 +1035,58 @@ export default {
       } catch (error) {
         console.error('获取教员课程散点图数据出错:', error)
         this.courseScatterOptions.series[0].data = []
+      }
+    },
+    // 获取教员行为分布数据
+    async fetchTeacherBehaviorData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortyNine',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的行为
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 更新两张图表的数据（显示相同的内容）
+        this.teacherBehaviorOptions.series[0].data = filteredData
+        this.myBehaviorOptions.series[0].data = filteredData
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const teacherChart = echarts.init(document.getElementById('teacherBehaviorChart'))
+          const myChart = echarts.init(document.getElementById('myBehaviorChart'))
+          
+          if (teacherChart) {
+            teacherChart.setOption(this.teacherBehaviorOptions)
+          }
+          if (myChart) {
+            myChart.setOption(this.myBehaviorOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取教员行为分布数据出错:', error)
+        this.teacherBehaviorOptions.series[0].data = []
+        this.myBehaviorOptions.series[0].data = []
       }
     }
   }
