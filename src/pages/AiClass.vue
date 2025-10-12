@@ -162,6 +162,9 @@
           show-overflow-tooltip
           min-width="120"
         >
+          <template slot-scope="scope">
+            {{ scope.row.lookupRate }}%
+          </template>
         </el-table-column>
         <el-table-column
           prop="attentionRate"
@@ -762,6 +765,111 @@ export default {
   min-width: 200px;
 }
 
+/* Element UI Date Picker 修复样式 */
+.el-date-editor {
+  width: 280px !important;
+  min-width: 280px !important;
+}
+
+.el-date-editor .el-range-separator {
+  width: auto !important;
+  min-width: 20px !important;
+  text-align: center !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  color: #606266 !important;
+  font-size: 14px !important;
+}
+
+.el-date-editor .el-range-input {
+  width: auto !important;
+  min-width: 100px !important;
+  flex: 1 !important;
+}
+
+.el-date-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.el-date-picker__header-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.el-picker-panel__icon-btn {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  color: #606266;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.el-picker-panel__icon-btn:hover {
+  color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.el-date-picker__header-btn {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  color: #606266;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.el-date-picker__header-btn:hover {
+  color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.el-date-picker__prev-btn,
+.el-date-picker__next-btn {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  color: #606266;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.el-date-picker__prev-btn:hover,
+.el-date-picker__next-btn:hover {
+  color: #409eff;
+  background-color: #f5f7fa;
+}
+
+/* 确保箭头图标显示 */
+.el-date-picker__prev-btn::before {
+  content: "❮";
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.el-date-picker__next-btn::before {
+  content: "❯";
+  font-size: 14px;
+  font-weight: bold;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .filter-row {
@@ -779,6 +887,12 @@ export default {
   .course-select {
     width: 100%;
     max-width: 300px;
+  }
+
+  .el-date-editor {
+    width: 100% !important;
+    max-width: 320px;
+    min-width: 280px;
   }
 }
 </style>

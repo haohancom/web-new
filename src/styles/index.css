@@ -264,6 +264,85 @@ ul, ol {
   top: 0px;
 }
 
+/* Element UI Date Picker 全局修复样式 */
+.el-date-picker__header {
+  position: relative;
+}
+
+/* 修复日期范围选择器分隔符显示问题 */
+.el-date-editor {
+  width: 280px !important;
+  min-width: 280px !important;
+}
+
+.el-date-editor .el-range-separator {
+  width: auto !important;
+  min-width: 20px !important;
+  text-align: center !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  color: #606266 !important;
+  font-size: 14px !important;
+  padding: 0 8px !important;
+}
+
+.el-date-editor .el-range-input {
+  width: auto !important;
+  min-width: 100px !important;
+  flex: 1 !important;
+}
+
+.el-date-picker__header-btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  color: #606266 !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  transition: all 0.3s !important;
+}
+
+.el-date-picker__prev-btn,
+.el-date-picker__next-btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  color: #606266 !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  transition: all 0.3s !important;
+}
+
+.el-date-picker__prev-btn:hover,
+.el-date-picker__next-btn:hover,
+.el-date-picker__header-btn:hover {
+  color: #409eff !important;
+  background-color: #f5f7fa !important;
+}
+
+/* 确保箭头图标显示 - 使用字体图标 */
+.el-date-picker__prev-btn::before {
+  content: "◀" !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+}
+
+.el-date-picker__next-btn::before {
+  content: "▶" !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+}
+
 /* 响应式布局 */
 @media (max-width: 1200px) {
   .data-grid {
