@@ -109,6 +109,18 @@
       </a-card>
     </div>
 
+    <!-- 发言次数前十班级柱状图 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">发言次数前十班级</div>
+        <v-chart
+          id="teacherClassSpeakingChart"
+          :option="classSpeakingOptions"
+          style="height: 350px"
+        ></v-chart>
+      </a-card>
+    </div>
+
   </div>
 </template>
 
@@ -205,6 +217,51 @@ export default {
               show: false,
             },
             data: [],
+          },
+        ],
+      },
+      classSpeakingOptions: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: [],
+          axisLabel: {
+            interval: 0,
+            rotate: 45,
+            fontSize: 12,
+          },
+        },
+        yAxis: {
+          type: "value",
+          name: "发言次数",
+          nameTextStyle: {
+            fontSize: 12,
+          },
+        },
+        series: [
+          {
+            name: "发言次数",
+            type: "bar",
+            data: [],
+            itemStyle: {
+              color: "#1890ff",
+            },
+            emphasis: {
+              itemStyle: {
+                color: "#40a9ff",
+              },
+            },
           },
         ],
       },
@@ -386,6 +443,9 @@ export default {
         // 获取学员情绪分布数据
         await this.fetchTeacherStudentEmotionData()
         
+        // 获取发言次数前十班级数据
+        await this.fetchTeacherClassSpeakingData()
+        
       } catch (error) {
         console.error('获取教员数据出错:', error)
         this.teacherDetail = {}
@@ -547,6 +607,66 @@ export default {
       } catch (error) {
         console.error('获取教员学员情绪分布数据出错:', error)
         this.studentEmotionOptions.series[0].data = []
+      }
+    },
+    // 获取教员发言次数前十班级数据
+    async fetchTeacherClassSpeakingData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortyFive',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 处理响应数据：{"计算机科学导论":0,"【研】数学与艺术":0,"控制系统计算机仿真":0,"非线性动力学":0}
+        let chartData = []
+        if (response && typeof response === 'object') {
+          // 将对象转换为数组并按发言次数从高到低排序
+          chartData = Object.entries(response)
+            .map(([className, speakingCount]) => ({
+              name: className,
+              value: speakingCount || 0
+            }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10) // 取前10个
+        }
+        
+        // 更新图表数据
+        const classNames = chartData.map(item => item.name)
+        const speakingCounts = chartData.map(item => item.value)
+        
+        this.classSpeakingOptions.xAxis.data = classNames
+        this.classSpeakingOptions.series[0].data = speakingCounts
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('teacherClassSpeakingChart'))
+          if (chart) {
+            chart.setOption(this.classSpeakingOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取教员发言次数前十班级数据出错:', error)
+        this.classSpeakingOptions.xAxis.data = []
+        this.classSpeakingOptions.series[0].data = []
       }
     }
   }
