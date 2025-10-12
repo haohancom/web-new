@@ -620,46 +620,157 @@ export default {
     showDetail(row) {
       this.dialogVisible = true;
       this.$nextTick(() => {
+        // 学生动作数据
         getStudentAction({ curriculumId: row.curriculumId }).then((res) => {
           if (!res || res.length === 0) {
             this.$message.warning("暂无学生动作数据");
             return;
           }
-          const data = res.map((item) => ({
-            value: item.count,
-            name: String(item.actionId),
-          }));
-          this.actionOptions.series[0].data = data;
+          // 过滤掉name为null的数据，并转换为正确的格式
+          const data = res
+            .filter(item => item.name !== null)
+            .map((item) => ({
+              value: parseInt(item.value),
+              name: item.name,
+            }));
+          
+          const studentActionOptions = {
+            tooltip: {
+              trigger: "item",
+            },
+            legend: {
+              top: "5%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "学生动作",
+                type: "pie",
+                radius: ["40%", "70%"],
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: "center",
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 40,
+                    fontWeight: "bold",
+                  },
+                },
+                labelLine: {
+                  show: false,
+                },
+                data: data,
+              },
+            ],
+          };
+          
           var chart1 = echarts.init(document.getElementById("chart1"));
-          chart1.setOption(this.actionOptions);
+          chart1.setOption(studentActionOptions);
         });
 
+        // 教师动作数据
         getTeacherAction({ curriculumId: row.curriculumId }).then((res) => {
           if (!res || res.length === 0) {
             this.$message.warning("暂无教师数据");
             return;
           }
-          const data = res.map((item) => ({
-            value: item.count,
-            name: String(item.actionId),
-          }));
-          this.actionOptions.series[0].data = data;
+          // 过滤掉name为null的数据，并转换为正确的格式
+          const data = res
+            .filter(item => item.name !== null)
+            .map((item) => ({
+              value: parseInt(item.value),
+              name: item.name,
+            }));
+          
+          const teacherActionOptions = {
+            tooltip: {
+              trigger: "item",
+            },
+            legend: {
+              top: "5%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "教师动作",
+                type: "pie",
+                radius: ["40%", "70%"],
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: "center",
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 40,
+                    fontWeight: "bold",
+                  },
+                },
+                labelLine: {
+                  show: false,
+                },
+                data: data,
+              },
+            ],
+          };
+          
           var chart2 = echarts.init(document.getElementById("chart2"));
-          chart2.setOption(this.actionOptions);
+          chart2.setOption(teacherActionOptions);
         });
 
+        // 学生情绪数据
         getStudentEmotion({ curriculumId: row.curriculumId }).then((res) => {
           if (!res || res.length === 0) {
             this.$message.warning("暂无学生情绪数据");
             return;
           }
-          const data = res.map((item) => ({
-            value: item.count,
-            name: String(item.emotionId),
-          }));
-          this.actionOptions.series[0].data = data;
+          // 过滤掉name为null的数据，并转换为正确的格式
+          const data = res
+            .filter(item => item.name !== null)
+            .map((item) => ({
+              value: parseInt(item.value),
+              name: item.name,
+            }));
+          
+          const studentEmotionOptions = {
+            tooltip: {
+              trigger: "item",
+            },
+            legend: {
+              top: "5%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "学生情绪",
+                type: "pie",
+                radius: ["40%", "70%"],
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: "center",
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 40,
+                    fontWeight: "bold",
+                  },
+                },
+                labelLine: {
+                  show: false,
+                },
+                data: data,
+              },
+            ],
+          };
+          
           var chart3 = echarts.init(document.getElementById("chart3"));
-          chart3.setOption(this.actionOptions);
+          chart3.setOption(studentEmotionOptions);
         });
       });
     },
