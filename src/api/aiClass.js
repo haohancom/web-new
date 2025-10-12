@@ -109,3 +109,21 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取教员抬头率数据
+  export function getTeacherHeadupRate(params) {
+    return request({
+      url: '/teacherData/fortyOne',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取学员班级抬头率数据
+  export function getStudentClassHeadupRate(params) {
+    return request({
+      url: '/studentClass/fiftyThree',
+      method: 'get',
+      params
+    })
+  }

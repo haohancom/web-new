@@ -83,7 +83,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import moment from 'moment'
 import service from '@/utils/fetch'
-import { getTeacher, getTeacherDetail } from '@/api/aiClass'
+import { getTeacher, getTeacherDetail, getTeacherHeadupRate } from '@/api/aiClass'
 import { colorList } from '../services/mockData'
 
 export default {
@@ -102,6 +102,8 @@ export default {
       teacherMapping: {}, // 存储教员名到teacherId的映射
       // 教员详情数据
       teacherDetail: {},
+      // 教员抬头率数据
+      headupRate: 0,
     }
   },
   computed: {
@@ -130,6 +132,13 @@ export default {
             ? `${Number(this.teacherDetail.studentExcitementRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[2],
+        },
+        {
+          label: "学员抬头率",
+          num: this.headupRate !== null && this.headupRate !== undefined 
+            ? `${Number(this.headupRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[3],
         },
       ];
     },
@@ -243,9 +252,46 @@ export default {
         // 更新教员详情数据
         this.teacherDetail = response || {}
         
+        // 获取教员抬头率数据
+        await this.fetchTeacherHeadupRate()
+        
       } catch (error) {
         console.error('获取教员数据出错:', error)
         this.teacherDetail = {}
+      }
+    },
+    // 获取教员抬头率数据
+    async fetchTeacherHeadupRate() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortyOne',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 更新教员抬头率数据
+        this.headupRate = response || 0
+        
+      } catch (error) {
+        console.error('获取教员抬头率出错:', error)
+        this.headupRate = 0
       }
     }
   }

@@ -83,7 +83,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import moment from 'moment'
 import service from '@/utils/fetch'
-import { getStudentClass, getStudentClassDetail } from '@/api/aiClass'
+import { getStudentClass, getStudentClassDetail, getStudentClassHeadupRate } from '@/api/aiClass'
 import { colorList } from '../services/mockData'
 
 export default {
@@ -102,6 +102,8 @@ export default {
       studentClassMapping: {}, // 存储班级名到studentClassId的映射
       // 学员班级详情数据
       studentClassDetail: {},
+      // 学员班级抬头率数据
+      headupRate: 0,
     }
   },
   computed: {
@@ -130,6 +132,13 @@ export default {
             ? `${Number(this.studentClassDetail.studentExcitementRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[2],
+        },
+        {
+          label: "学员抬头率",
+          num: this.headupRate !== null && this.headupRate !== undefined 
+            ? `${Number(this.headupRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[3],
         },
       ];
     },
@@ -243,9 +252,46 @@ export default {
         // 更新学员班级详情数据
         this.studentClassDetail = response || {}
         
+        // 获取学员班级抬头率数据
+        await this.fetchStudentClassHeadupRate()
+        
       } catch (error) {
         console.error('获取学员数据出错:', error)
         this.studentClassDetail = {}
+      }
+    },
+    // 获取学员班级抬头率数据
+    async fetchStudentClassHeadupRate() {
+      if (!this.startDate || !this.endDate || !this.studentClass) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const studentClassId = this.studentClassMapping[this.studentClass]
+        
+        if (!studentClassId) {
+          console.error('未找到对应的studentClassId:', this.studentClass)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/studentClass/fiftyThree',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            studentClassId: studentClassId
+          }
+        })
+        
+        // 更新学员班级抬头率数据
+        this.headupRate = response || 0
+        
+      } catch (error) {
+        console.error('获取学员班级抬头率出错:', error)
+        this.headupRate = 0
       }
     }
   }
