@@ -91,3 +91,21 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取教员详情数据
+  export function getTeacherDetail(params) {
+    return request({
+      url: '/teacherData/thirtyEight',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取学员班级详情数据
+  export function getStudentClassDetail(params) {
+    return request({
+      url: '/studentClass/fiftyTwo',
+      method: 'get',
+      params
+    })
+  }

@@ -58,6 +58,23 @@
       </div>
     </div>
 
+    <!-- 顶部数据卡片 -->
+    <div class="data-grid">
+      <a-card
+        v-for="(item, index) in numList"
+        :key="index"
+        class="data-card"
+        :style="{ '--card-color': item.color }"
+      >
+        <div class="card-number">
+          {{ item.num }}
+        </div>
+        <div class="card-title">
+          {{ item.label }}
+        </div>
+      </a-card>
+    </div>
+
   </div>
 </template>
 
@@ -66,7 +83,8 @@ import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { h } from 'vue'
 import moment from 'moment'
 import service from '@/utils/fetch'
-import { getTeacher } from '@/api/aiClass'
+import { getTeacher, getTeacherDetail } from '@/api/aiClass'
+import { colorList } from '../services/mockData'
 
 export default {
   name: 'TeacherData',
@@ -82,12 +100,39 @@ export default {
       teacher: null,
       teacherList: [],
       teacherMapping: {}, // 存储教员名到teacherId的映射
+      // 教员详情数据
+      teacherDetail: {},
     }
   },
   computed: {
     canSelectTeacher() {
       return this.startDate && this.endDate
-    }
+    },
+    numList() {
+      return [
+        {
+          label: "学员参与度",
+          num: this.teacherDetail && this.teacherDetail.studentEngagementRate !== null && this.teacherDetail.studentEngagementRate !== undefined
+            ? `${Number(this.teacherDetail.studentEngagementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[1],
+        },
+        {
+          label: "学员活跃度",
+          num: this.teacherDetail && this.teacherDetail.studentActivationRate !== null && this.teacherDetail.studentActivationRate !== undefined
+            ? `${Number(this.teacherDetail.studentActivationRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[4],
+        },
+        {
+          label: "学员兴奋度",
+          num: this.teacherDetail && this.teacherDetail.studentExcitementRate !== null && this.teacherDetail.studentExcitementRate !== undefined
+            ? `${Number(this.teacherDetail.studentExcitementRate).toFixed(1)}%`
+            : "0.0%",
+          color: colorList[2],
+        },
+      ];
+    },
   },
   methods: {
     goHome() {
@@ -185,15 +230,22 @@ export default {
           return
         }
         
-        // 这里可以添加获取具体教员数据的API调用
-        console.log('获取教员数据:', {
-          startDate: startDateStr,
-          endDate: endDateStr,
-          teacherId: teacherId
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/thirtyEight',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
         })
+        
+        // 更新教员详情数据
+        this.teacherDetail = response || {}
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
+        this.teacherDetail = {}
       }
     }
   }
@@ -281,7 +333,64 @@ export default {
   }
 }
 
+/* 数据网格样式 */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1200px) {
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .data-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .data-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 109, 232, 0.15);
+}
+
+.data-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--card-color);
+}
+
+.card-number {
+  color: var(--card-color);
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.card-title {
+  font-size: 16px;
+  color: #7c7c7c;
+}
+
+.old-data-card {
   background: #f7f8fa;
   border-radius: 10px;
 }
