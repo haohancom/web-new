@@ -83,7 +83,7 @@
             </el-option>
           </el-select>
         </div>
-        <a-button type="primary" @click="getTable" class="back-button">
+        <a-button type="primary" @click="handleQuery" class="back-button">
           查询
         </a-button>
         <a-button
@@ -283,6 +283,7 @@ import {
   getStudentAction,
   getStudentEmotion,
   getTeacherAction,
+  getClassCount,
 } from "@/api/aiClass";
 import * as echarts from "echarts";
 import { h } from "vue";
@@ -401,7 +402,7 @@ export default {
       pageSize: 10,
       studentClassId: "",
       dateRange: null,
-      teacherId: null,
+      teacherId: "",
       h,
       tableData: [],
       loading: false,
@@ -577,19 +578,45 @@ export default {
         teacherId: this.teacherId,
         studentClassId: this.studentClassId,
         courseId: this.courseId,
+        siteId: this.siteId, // 修复：添加siteId参数
         pageNum: this.currentPage,
         pageSize: this.pageSize,
       };
+      
+      // 获取总数的参数（不包含分页参数）
+      let countParams = {
+        startDate: this.dateRange ? this.dateRange[0] : null,
+        endDate: this.dateRange ? this.dateRange[1] : null,
+        teacherId: this.teacherId,
+        studentClassId: this.studentClassId,
+        courseId: this.courseId,
+        siteId: this.siteId, // 修复：添加siteId参数
+      };
+      
       console.log(params);
-      getClass(params).then((res) => {
-        if (res.length !== 0) {
-          this.tableData = res;
-          // this.total = res.meta.total;
+      
+      // 同时调用获取数据和获取总数的接口
+      Promise.all([
+        getClass(params),
+        getClassCount(countParams)
+      ]).then(([dataRes, countRes]) => {
+        if (dataRes && dataRes.length !== 0) {
+          this.tableData = dataRes;
+          this.total = countRes || 0; // 设置总数
           this.$message.success("查询成功");
         } else {
+          this.tableData = [];
+          this.total = 0;
           this.$message.warning("暂无数据");
         }
+      }).catch((error) => {
+        console.error("查询失败:", error);
+        this.$message.error("查询失败，请稍后重试");
       });
+    },
+    handleQuery() {
+      this.currentPage = 1; // 重置到第一页
+      this.getTable();
     },
     goHome() {
       this.$router.push("/");

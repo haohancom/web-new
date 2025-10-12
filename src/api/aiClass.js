@@ -73,3 +73,12 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取数据总数
+  export function getClassCount(params) {
+    return request({
+      url: '/aiClass/queryCount',
+      method: 'get',
+      params
+    })
+  }
