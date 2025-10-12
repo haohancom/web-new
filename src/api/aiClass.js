@@ -82,3 +82,12 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取详情列表数据
+  export function getDetailList(params) {
+    return request({
+      url: '/aiClass/queryDetailList',
+      method: 'get',
+      params
+    })
+  }

@@ -163,7 +163,7 @@
           min-width="120"
         >
           <template slot-scope="scope">
-            {{ scope.row.lookupRate }}%
+            {{ scope.row.lookupRate || '0' }}%
           </template>
         </el-table-column>
         <el-table-column
@@ -173,6 +173,9 @@
           show-overflow-tooltip
           min-width="120"
         >
+          <template slot-scope="scope">
+            {{ scope.row.attentionRate || '0' }}%
+          </template>
         </el-table-column>
         <el-table-column
           prop="participationRate"
@@ -181,6 +184,9 @@
           show-overflow-tooltip
           min-width="120"
         >
+          <template slot-scope="scope">
+            {{ scope.row.participationRate || '0' }}%
+          </template>
         </el-table-column>
         <el-table-column
           prop="activityRate"
@@ -189,6 +195,9 @@
           show-overflow-tooltip
           min-width="120"
         >
+          <template slot-scope="scope">
+            {{ scope.row.activityRate || '0' }}%
+          </template>
         </el-table-column>
         <el-table-column
           label="操作"
@@ -284,6 +293,7 @@ import {
   getStudentEmotion,
   getTeacherAction,
   getClassCount,
+  getDetailList,
 } from "@/api/aiClass";
 import * as echarts from "echarts";
 import { h } from "vue";
@@ -601,9 +611,28 @@ export default {
         getClassCount(countParams)
       ]).then(([dataRes, countRes]) => {
         if (dataRes && dataRes.length !== 0) {
-          this.tableData = dataRes;
-          this.total = countRes || 0; // 设置总数
-          this.$message.success("查询成功");
+          // 提取curriculumId列表
+          const curriculumIds = dataRes.map(item => item.curriculumId).join(',');
+          
+          // 如果有curriculumId，则调用详情接口
+          if (curriculumIds) {
+            getDetailList({ curriculumIdList: curriculumIds }).then((detailRes) => {
+              // 使用详情数据更新表格数据
+              this.tableData = this.updateTableWithDetails(dataRes, detailRes);
+              this.total = countRes || 0;
+              this.$message.success("查询成功");
+            }).catch((detailError) => {
+              console.error("获取详情数据失败:", detailError);
+              // 即使详情接口失败，也显示基础数据
+              this.tableData = dataRes;
+              this.total = countRes || 0;
+              this.$message.success("查询成功（详情数据获取失败）");
+            });
+          } else {
+            this.tableData = dataRes;
+            this.total = countRes || 0;
+            this.$message.success("查询成功");
+          }
         } else {
           this.tableData = [];
           this.total = 0;
@@ -612,6 +641,52 @@ export default {
       }).catch((error) => {
         console.error("查询失败:", error);
         this.$message.error("查询失败，请稍后重试");
+      });
+    },
+    // 根据详情数据更新表格数据
+    updateTableWithDetails(tableData, detailData) {
+      // 创建详情数据的映射，以curriculumId为key
+      const detailMap = {};
+      if (detailData && detailData.length > 0) {
+        detailData.forEach(item => {
+          detailMap[item.curriculumId] = item;
+        });
+      }
+
+      // 格式化数值，处理0值和null值
+      const formatValue = (value) => {
+        if (value === null || value === undefined || value === '') {
+          return '0';
+        }
+        // 确保数字类型，并保留一位小数
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) {
+          return '0';
+        }
+        return numValue.toFixed(1);
+      };
+
+      // 更新表格数据
+      return tableData.map(row => {
+        const detail = detailMap[row.curriculumId];
+        if (detail) {
+          return {
+            ...row,
+            // 映射详情数据到表格字段，如果没有值则默认显示0
+            lookupRate: formatValue(detail.studentFocusRate || row.lookupRate), // 抬头率对应studentFocusRate
+            attentionRate: formatValue(detail.studentExcitementRate || row.attentionRate || 0), // 兴奋度对应studentExcitementRate，默认0
+            participationRate: formatValue(detail.studentEngagementRate || row.participationRate || 0), // 参与度对应studentEngagementRate，默认0
+            activityRate: formatValue(detail.studentActivationRate || row.activityRate || 0), // 活跃度对应studentActivationRate，默认0
+          };
+        }
+        return {
+          ...row,
+          // 如果没有详情数据，确保默认值
+          lookupRate: formatValue(row.lookupRate),
+          attentionRate: formatValue(row.attentionRate || 0),
+          participationRate: formatValue(row.participationRate || 0),
+          activityRate: formatValue(row.activityRate || 0),
+        };
       });
     },
     handleQuery() {
