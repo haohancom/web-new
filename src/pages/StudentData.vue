@@ -128,6 +128,8 @@ export default {
       studentClassDetail: {},
       // 学员班级抬头率数据
       headupRate: 0,
+      // 参与课程数数据
+      courseCount: 0,
       // 图表相关数据
       studentActionOptions: {
         tooltip: {
@@ -228,6 +230,13 @@ export default {
             ? `${Number(this.headupRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[3],
+        },
+        {
+          label: "参与课程数",
+          num: this.courseCount !== null && this.courseCount !== undefined 
+            ? `${this.courseCount}`
+            : "0",
+          color: colorList[0],
         },
       ];
     },
@@ -344,6 +353,9 @@ export default {
         // 获取学员班级抬头率数据
         await this.fetchStudentClassHeadupRate()
         
+        // 获取参与课程数数据
+        await this.fetchStudentClassCourseCount()
+        
         // 获取学员动作分布数据
         await this.fetchStudentClassActionData()
         
@@ -387,6 +399,40 @@ export default {
       } catch (error) {
         console.error('获取学员班级抬头率出错:', error)
         this.headupRate = 0
+      }
+    },
+    // 获取学员班级参与课程数数据
+    async fetchStudentClassCourseCount() {
+      if (!this.startDate || !this.endDate || !this.studentClass) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const studentClassId = this.studentClassMapping[this.studentClass]
+        
+        if (!studentClassId) {
+          console.error('未找到对应的studentClassId:', this.studentClass)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/studentClass/fiftyFour',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            studentClassId: studentClassId
+          }
+        })
+        
+        // 更新参与课程数数据
+        this.courseCount = response || 0
+        
+      } catch (error) {
+        console.error('获取学员班级参与课程数出错:', error)
+        this.courseCount = 0
       }
     },
     // 获取学员班级学员动作分布数据
