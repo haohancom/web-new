@@ -96,6 +96,48 @@
       </a-card>
     </div>
 
+    <!-- 课程进度图表区域 -->
+    <div class="chart-grid" v-if="studentClass">
+      <a-card class="chart-card">
+        <div class="chart-title">课程参与度</div>
+        <div class="wave-container">
+          <canvas
+            ref="engagementCanvas"
+            class="wave-chart"
+            width="200"
+            height="200"
+          ></canvas>
+          <div class="wave-percentage">{{ Math.round(engagementRate) }}%</div>
+        </div>
+      </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">课程活跃度</div>
+        <div class="wave-container">
+          <canvas
+            ref="activationCanvas"
+            class="wave-chart"
+            width="200"
+            height="200"
+          ></canvas>
+          <div class="wave-percentage">{{ Math.round(activationRate) }}%</div>
+        </div>
+      </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">课程兴奋度</div>
+        <div class="wave-container">
+          <canvas
+            ref="excitementCanvas"
+            class="wave-chart"
+            width="200"
+            height="200"
+          ></canvas>
+          <div class="wave-percentage">{{ Math.round(excitementRate) }}%</div>
+        </div>
+      </a-card>
+    </div>
+
   </div>
 </template>
 
@@ -130,6 +172,10 @@ export default {
       headupRate: 0,
       // 参与课程数数据
       courseCount: 0,
+      // 进度图数据
+      engagementRate: 0,
+      activationRate: 0,
+      excitementRate: 0,
       // 图表相关数据
       studentActionOptions: {
         tooltip: {
@@ -362,6 +408,9 @@ export default {
         // 获取学员情绪分布数据
         await this.fetchStudentClassEmotionData()
         
+        // 更新课程进度图数据
+        this.updateCourseProgressCharts()
+        
       } catch (error) {
         console.error('获取学员数据出错:', error)
         this.studentClassDetail = {}
@@ -524,6 +573,95 @@ export default {
         console.error('获取学员班级学员情绪分布数据出错:', error)
         this.studentEmotionOptions.series[0].data = []
       }
+    },
+    // 更新课程进度图数据
+    updateCourseProgressCharts() {
+      try {
+        // 获取参与度、活跃度、兴奋度数据
+        this.engagementRate = this.studentClassDetail && this.studentClassDetail.studentEngagementRate !== null && this.studentClassDetail.studentEngagementRate !== undefined
+          ? Number(this.studentClassDetail.studentEngagementRate)
+          : 0
+        
+        this.activationRate = this.studentClassDetail && this.studentClassDetail.studentActivationRate !== null && this.studentClassDetail.studentActivationRate !== undefined
+          ? Number(this.studentClassDetail.studentActivationRate)
+          : 0
+        
+        this.excitementRate = this.studentClassDetail && this.studentClassDetail.studentExcitementRate !== null && this.studentClassDetail.studentExcitementRate !== undefined
+          ? Number(this.studentClassDetail.studentExcitementRate)
+          : 0
+        
+        // 绘制水波图
+        this.$nextTick(() => {
+          this.drawWaveChart(this.$refs.engagementCanvas, this.engagementRate, '#4CAF50')
+          this.drawWaveChart(this.$refs.activationCanvas, this.activationRate, '#FF9800')
+          this.drawWaveChart(this.$refs.excitementCanvas, this.excitementRate, '#E91E63')
+        })
+        
+      } catch (error) {
+        console.error('更新课程进度图数据出错:', error)
+      }
+    },
+    // 绘制水波图
+    drawWaveChart(canvas, percentage, color) {
+      if (!canvas) return
+      
+      const ctx = canvas.getContext('2d')
+      const centerX = canvas.width / 2
+      const centerY = canvas.height / 2
+      const radius = 80
+      
+      // 清空画布
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      // 保存状态
+      ctx.save()
+      
+      // 绘制外圆边框
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 4
+      ctx.stroke()
+      
+      // 计算水位高度
+      const waterLevel = radius * 2 * (percentage / 100)
+      
+      if (percentage > 0) {
+        // 设置圆形裁剪区域
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+        ctx.clip()
+        
+        // 创建渐变
+        const gradient = ctx.createLinearGradient(centerX - radius, centerY + radius, centerX + radius, centerY + radius)
+        gradient.addColorStop(0, color + '60') // 半透明
+        gradient.addColorStop(0.5, color + '80')
+        gradient.addColorStop(1, color)
+        
+        // 绘制水波效果
+        const waveLength = radius * 2 / 3
+        const amplitude = 8
+        
+        ctx.beginPath()
+        ctx.fillStyle = gradient
+        
+        for (let x = centerX - radius; x <= centerX + radius; x += 2) {
+          const y = centerY + radius - waterLevel + amplitude * Math.sin((x - centerX) / waveLength * Math.PI * 2 + Date.now() / 1000)
+          if (x === centerX - radius) {
+            ctx.moveTo(x, y)
+          } else {
+            ctx.lineTo(x, y)
+          }
+        }
+        
+        ctx.lineTo(centerX + radius, centerY + radius)
+        ctx.lineTo(centerX - radius, centerY + radius)
+        ctx.closePath()
+        ctx.fill()
+      }
+      
+      // 恢复状态
+      ctx.restore()
     }
   }
 }
@@ -628,6 +766,31 @@ export default {
   .chart-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 水波图样式 */
+.wave-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 280px;
+}
+
+.wave-chart {
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.wave-percentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .chart-card {
