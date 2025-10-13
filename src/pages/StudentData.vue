@@ -97,10 +97,10 @@
     </div>
 
     <!-- 课程进度图表区域 -->
-    <div class="chart-grid" v-if="studentClass">
+    <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">课程参与度</div>
-        <div class="wave-container">
+        <div class="wave-container" v-if="studentClass">
           <canvas
             ref="engagementCanvas"
             class="wave-chart"
@@ -109,11 +109,14 @@
           ></canvas>
           <div class="wave-percentage">{{ Math.round(engagementRate) }}%</div>
         </div>
+        <div v-else class="wave-placeholder">
+          请先选择学员班级
+        </div>
       </a-card>
 
       <a-card class="chart-card">
         <div class="chart-title">课程活跃度</div>
-        <div class="wave-container">
+        <div class="wave-container" v-if="studentClass">
           <canvas
             ref="activationCanvas"
             class="wave-chart"
@@ -122,11 +125,14 @@
           ></canvas>
           <div class="wave-percentage">{{ Math.round(activationRate) }}%</div>
         </div>
+        <div v-else class="wave-placeholder">
+          请先选择学员班级
+        </div>
       </a-card>
 
       <a-card class="chart-card">
         <div class="chart-title">课程兴奋度</div>
-        <div class="wave-container">
+        <div class="wave-container" v-if="studentClass">
           <canvas
             ref="excitementCanvas"
             class="wave-chart"
@@ -134,6 +140,9 @@
             height="200"
           ></canvas>
           <div class="wave-percentage">{{ Math.round(excitementRate) }}%</div>
+        </div>
+        <div v-else class="wave-placeholder">
+          请先选择学员班级
         </div>
       </a-card>
     </div>
@@ -791,6 +800,18 @@ export default {
   font-weight: bold;
   color: #333;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.wave-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 280px;
+  color: #999;
+  font-size: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
 }
 
 .chart-card {
