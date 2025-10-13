@@ -95,14 +95,18 @@ const routes = [
     ]
   },
   {
-    path: '*',
+    path: '/404',
     name: 'NotFound',
     component: NotFound
+  },
+  {
+    path: '*',
+    redirect: '/404'
   }
 ]
 
 const router = new VueRouter({
-  mode: 'history',
+  mode: 'hash',
   base: process.env.BASE_URL,
   routes
 })
