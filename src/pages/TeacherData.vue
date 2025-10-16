@@ -133,6 +133,18 @@
       </a-card>
     </div>
 
+    <!-- 学员类型分析柱状图 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">学员类型分析</div>
+        <v-chart
+          id="studentTypeAnalysisChart"
+          :option="studentTypeAnalysisOptions"
+          style="height: 350px"
+        ></v-chart>
+      </a-card>
+    </div>
+
     <!-- 课堂类型图、课堂类型占比图和我的行为动作分布图 -->
     <div class="chart-grid-three">
       <a-card class="chart-card">
@@ -581,6 +593,52 @@ export default {
           },
         ],
       },
+      // 学员类型分析柱状图配置
+      studentTypeAnalysisOptions: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: [],
+          axisLabel: {
+            interval: 0,
+            rotate: 45,
+            fontSize: 12,
+          },
+        },
+        yAxis: {
+          type: "value",
+          name: "次数",
+          nameTextStyle: {
+            fontSize: 12,
+          },
+        },
+        series: [
+          {
+            name: "行为次数",
+            type: "bar",
+            data: [],
+            itemStyle: {
+              color: "#1890ff",
+            },
+            emphasis: {
+              itemStyle: {
+                color: "#40a9ff",
+              },
+            },
+          },
+        ],
+      },
       // 课堂类型占比饼状图配置
       classroomTypePieOptions: createClassroomTypePieOptions(),
     }
@@ -785,6 +843,9 @@ export default {
         
         // 获取教员行为分布数据
         await this.fetchTeacherBehaviorData()
+        
+        // 获取学员类型分析数据
+        await this.fetchStudentTypeAnalysisData()
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
@@ -1141,6 +1202,57 @@ export default {
           pieChart.setOption(this.classroomTypePieOptions)
         }
       })
+    },
+    // 获取学员类型分析数据
+    async fetchStudentTypeAnalysisData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortyEight',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的行为
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 提取行为名称和数值
+        const behaviorNames = filteredData.map(item => item.name)
+        const behaviorValues = filteredData.map(item => Number(item.value))
+        
+        // 更新图表数据
+        this.studentTypeAnalysisOptions.xAxis.data = behaviorNames
+        this.studentTypeAnalysisOptions.series[0].data = behaviorValues
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('studentTypeAnalysisChart'))
+          if (chart) {
+            chart.setOption(this.studentTypeAnalysisOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取学员类型分析数据出错:', error)
+        this.studentTypeAnalysisOptions.xAxis.data = []
+        this.studentTypeAnalysisOptions.series[0].data = []
+      }
     }
   }
 }
