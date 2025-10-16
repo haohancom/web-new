@@ -171,10 +171,7 @@
           style="height: 280px"
         ></v-chart>
       </a-card>
-    </div>
 
-    <!-- 第三行图表区域 - 课堂占比饼状图 -->
-    <div class="chart-grid">
       <a-card class="chart-card">
         <div class="chart-title">课堂类型占比</div>
         <v-chart
