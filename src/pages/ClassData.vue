@@ -653,7 +653,20 @@ export default {
     },
   },
   async mounted() {
+    // 设置默认时间范围：开始时间为180天前，结束时间为今天
+    this.startDate = moment().subtract(180, 'days')
+    this.endDate = moment()
+    
+    // 加载默认数据
     await this.loadClassData()
+    
+    // 获取课程列表并自动选择第一个课程
+    await this.fetchCourseList()
+    if (this.courseList.length > 0) {
+      this.course = this.courseList[0]
+      // 选择课程后获取班级数据
+      await this.fetchClassData()
+    }
   },
   methods: {
     goHome() {
