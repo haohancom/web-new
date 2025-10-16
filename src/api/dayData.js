@@ -112,3 +112,12 @@ export function dzfb(params) {
       }
     });
   }
+
+  //获取课程数
+  export function sixteen(params) {
+    return request({
+      url: '/today/sixteen',
+      method: 'get',
+      params
+    })
+  }

@@ -143,7 +143,7 @@ import * as echarts from "echarts";
 import { h } from "vue";
 import VChart from "vue-echarts";
 import { colorList } from "../services/mockData";
-import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx, twentyOne, getClassroomAttendance } from "@/api/dayData";
+import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx, twentyOne, getClassroomAttendance, sixteen } from "@/api/dayData";
 import { xscq } from "../api/dayData";
 
 export default {
@@ -158,6 +158,7 @@ export default {
      stAttRate:50,
       teacherCount: 0, // 教员人数
       studentCount: 0, // 学员人数
+      courseCount: 0, // 课程数
       studentActionOptions: {
         tooltip: {
           trigger: "item",
@@ -514,7 +515,7 @@ export default {
         },
         {
           label: "课程数",
-          num: this.studentData?.courses || 0,
+          num: this.courseCount,
           color: colorList[5],
         },
       ];
@@ -784,6 +785,13 @@ this.headupRate = avg.toFixed(2) + "%"
          xscq({}).then((res) =>{
           this.stAttRate = res
          })
+
+      // 获取课程数
+      sixteen({}).then((res) => {
+        this.courseCount = res || 0;
+      }).catch((error) => {
+        console.error('获取课程数失败:', error);
+      });
 
     },
     goHome() {
