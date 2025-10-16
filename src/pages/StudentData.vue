@@ -296,6 +296,21 @@ export default {
       ];
     },
   },
+  async mounted() {
+    // 设置默认时间范围：开始时间为180天前，结束时间为今天
+    this.startDate = moment().subtract(180, 'days')
+    this.endDate = moment()
+    
+    // 获取学员班级列表并自动选择第一个班级
+    await this.fetchStudentClassList()
+    if (this.studentClassList.length > 0) {
+      // 选择第一个班级
+      this.studentClass = this.studentClassList[0]
+      
+      // 选择班级后获取学员数据
+      await this.fetchStudentData()
+    }
+  },
   methods: {
     goHome() {
       this.$router.push('/')
@@ -367,6 +382,13 @@ export default {
           Object.entries(response).forEach(([studentClassId, studentClassName]) => {
             this.studentClassMapping[studentClassName] = studentClassId
           })
+          
+          // 如果当前没有选择班级且有可用班级，自动选择第一个
+          if (!this.studentClass && this.studentClassList.length > 0) {
+            this.studentClass = this.studentClassList[0]
+            // 自动获取选中班级的数据
+            await this.fetchStudentData()
+          }
         } else {
           this.studentClassList = []
           this.studentClassMapping = {}
