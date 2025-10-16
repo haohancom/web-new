@@ -215,7 +215,6 @@ export default {
           key: 'count', 
           width: 150, 
           align: 'right',
-          customRender: ({ record }) => Number(record.count).toLocaleString()
         }
       ],
       participationColumns: [
@@ -226,7 +225,6 @@ export default {
           key: 'rate', 
           width: 150, 
           align: 'right',
-          customRender: ({ record }) => `${Number(record.rate).toFixed(1)}%`
         }
       ],
       // 图表相关数据
@@ -799,8 +797,6 @@ export default {
               courseName,
               count: Number(count)
             }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10) // 只取前10名
           console.log('处理后的发言次数数据:', this.speakingTopTenData)
         } else {
           console.log('发言次数数据格式不正确:', speakingResponse)
@@ -812,11 +808,8 @@ export default {
           this.participationTopTenData = Object.entries(participationResponse)
             .map(([courseName, rate]) => ({
               courseName,
-              //todo: 下面这行后面加百分号, 只保留一位小数
-              rate: Number(rate).toFixed(1) + '%' // 保持原始数值
+              rate: Number(rate).toFixed(1) + '%' // 保持数值类型
             }))
-            .sort((a, b) => b.rate - a.rate)
-            .slice(0, 10) // 只取前10名
           console.log('处理后的参与度数据:', this.participationTopTenData)
         } else {
           console.log('参与度数据格式不正确:', participationResponse)
