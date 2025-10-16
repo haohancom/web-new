@@ -96,7 +96,7 @@
         <div class="overview-title">班级概况</div>
          <v-chart
           id="chart7"
-          :option="speakingOptions"
+          :option="classOverviewOptions"
           style="height: 280px"
         ></v-chart>
         <!-- <div class="item-grid" style="grid-template-columns: repeat(3, 1fr)">
@@ -200,6 +200,53 @@ export default {
       teacherActionOptions: {},
       teacherEmotionOptions: {},
       speakingOptions: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow"
+          },
+          formatter: function(params) {
+            if (params && params.length > 0) {
+              const param = params[0];
+              return `${param.name}<br/>发言次数: ${param.value}次`;
+            }
+            return '';
+          }
+        },
+        xAxis: {
+          axisLabel: {
+            interval: 0, // 强制显示所有标签
+            rotate: 45, // 倾斜45°
+            fontSize: 12,
+          },
+          type: "category",
+          data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            data: [120, 200, 150, 80, 70, 110, 130],
+            type: "bar",
+          },
+        ],
+      },
+      // 班级概况专用配置
+      classOverviewOptions: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow"
+          },
+          formatter: function(params) {
+            if (params && params.length > 0) {
+              const param = params[0];
+              return `${param.name}<br/>上课次数: ${param.value}次`;
+            }
+            return '';
+          }
+        },
         xAxis: {
           axisLabel: {
             interval: 0, // 强制显示所有标签
@@ -766,19 +813,19 @@ this.headupRate = avg.toFixed(2) + "%"
       });
 
       
-      //发言次数分布
+      //班级概况
       bjgk({}).then((res) => {
         const xData = [];
         const yData = [];
 
         for (const [key, value] of Object.entries(res)) {
-          xData.push(key); // 课程名
-          yData.push(Number(value)); // 数量，确保转成数字
+          xData.push(key); // 班级名
+          yData.push(Number(value)); // 上课次数，确保转成数字
         }
-        this.speakingOptions.xAxis.data = xData;
-        this.speakingOptions.series[0].data = yData;
+        this.classOverviewOptions.xAxis.data = xData;
+        this.classOverviewOptions.series[0].data = yData;
         var chart7 = echarts.init(document.getElementById("chart7"));
-        chart7.setOption(this.speakingOptions);
+        chart7.setOption(this.classOverviewOptions);
       });
 
       //学生出勤率
