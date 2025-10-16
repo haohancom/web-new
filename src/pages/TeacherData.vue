@@ -563,33 +563,46 @@ export default {
       // 我的行为动作分布图表
       myBehaviorOptions: {
         tooltip: {
-          trigger: "item",
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
         },
-        legend: {
-          top: "5%",
-          left: "center",
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: [],
+          axisLabel: {
+            interval: 0,
+            rotate: 45,
+            fontSize: 12,
+          },
+        },
+        yAxis: {
+          type: "value",
+          name: "次数",
+          nameTextStyle: {
+            fontSize: 12,
+          },
         },
         series: [
           {
-            name: "我的行为动作分布",
-            type: "pie",
-            radius: ["40%", "70%"],
-            avoidLabelOverlap: false,
-            label: {
-              show: false,
-              position: "center",
+            name: "行为次数",
+            type: "bar",
+            data: [],
+            itemStyle: {
+              color: "#52c41a",
             },
             emphasis: {
-              label: {
-                show: true,
-                fontSize: 40,
-                fontWeight: "bold",
+              itemStyle: {
+                color: "#73d13d",
               },
             },
-            labelLine: {
-              show: false,
-            },
-            data: [],
           },
         ],
       },
@@ -846,6 +859,9 @@ export default {
         
         // 获取学员类型分析数据
         await this.fetchStudentTypeAnalysisData()
+        
+        // 获取我的行为动作分布数据（次数）
+        await this.fetchMyBehaviorCountData()
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
@@ -1158,27 +1174,20 @@ export default {
         // 处理响应数据，过滤掉null值的行为
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新两张图表的数据（显示相同的内容）
+        // 只更新教员行为分布图表的数据
         this.teacherBehaviorOptions.series[0].data = filteredData
-        this.myBehaviorOptions.series[0].data = filteredData
         
-        // 手动更新图表
+        // 手动更新教员行为分布图表
         this.$nextTick(() => {
           const teacherChart = echarts.init(document.getElementById('teacherBehaviorChart'))
-          const myChart = echarts.init(document.getElementById('myBehaviorChart'))
-          
           if (teacherChart) {
             teacherChart.setOption(this.teacherBehaviorOptions)
-          }
-          if (myChart) {
-            myChart.setOption(this.myBehaviorOptions)
           }
         })
         
       } catch (error) {
         console.error('获取教员行为分布数据出错:', error)
         this.teacherBehaviorOptions.series[0].data = []
-        this.myBehaviorOptions.series[0].data = []
       }
     },
     // 计算教员课堂类型分布
@@ -1252,6 +1261,57 @@ export default {
         console.error('获取学员类型分析数据出错:', error)
         this.studentTypeAnalysisOptions.xAxis.data = []
         this.studentTypeAnalysisOptions.series[0].data = []
+      }
+    },
+    // 获取我的行为动作分布数据（次数）
+    async fetchMyBehaviorCountData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fifty',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        // 处理响应数据，过滤掉null值的行为
+        const filteredData = (response || []).filter(item => item.name !== null)
+        
+        // 提取行为名称和次数
+        const behaviorNames = filteredData.map(item => item.name)
+        const behaviorCounts = filteredData.map(item => Number(item.value))
+        
+        // 更新我的行为动作分布图表数据
+        this.myBehaviorOptions.xAxis.data = behaviorNames
+        this.myBehaviorOptions.series[0].data = behaviorCounts
+        
+        // 手动更新图表
+        this.$nextTick(() => {
+          const chart = echarts.init(document.getElementById('myBehaviorChart'))
+          if (chart) {
+            chart.setOption(this.myBehaviorOptions)
+          }
+        })
+        
+      } catch (error) {
+        console.error('获取我的行为动作分布数据出错:', error)
+        this.myBehaviorOptions.xAxis.data = []
+        this.myBehaviorOptions.series[0].data = []
       }
     }
   }
@@ -1524,3 +1584,4 @@ export default {
   top: 0;
 }
 </style>
+
