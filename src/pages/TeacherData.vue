@@ -61,6 +61,9 @@
     <!-- 教员班级信息区域 -->
     <div class="teacher-info-section" v-if="teacher">
       <div class="teacher-info-content">
+        <div class="teacher-overview-title">
+          <span class="title-text">学员概况</span>
+        </div>
         <span v-if="teacherClassList.length > 0">
           当前时间段内，<span class="highlight">{{ teacher }}</span>老师共教授<span class="highlight">{{ teacherClassList.length }}</span>个小班，
           教授班级为: <span class="class-names">{{ displayTeacherClassNames }}</span>
@@ -625,6 +628,22 @@ export default {
       ];
     },
   },
+  async mounted() {
+    // 设置默认时间范围：开始时间为180天前，结束时间为今天
+    this.startDate = moment().subtract(180, 'days')
+    this.endDate = moment()
+    
+    // 获取教员列表并自动选择教员
+    await this.fetchTeacherList()
+    if (this.teacherList.length > 0) {
+      // 优先选择吴萌，否则选择第一个
+      const wumengIndex = this.teacherList.findIndex(teacher => teacher === '吴萌')
+      this.teacher = wumengIndex !== -1 ? this.teacherList[wumengIndex] : this.teacherList[0]
+      
+      // 选择教员后获取教员数据
+      await this.fetchTeacherData()
+    }
+  },
   methods: {
     goHome() {
       this.$router.push('/')
@@ -1165,6 +1184,25 @@ export default {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
+}
+
+.teacher-overview-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  width: fit-content;
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
 }
 
 .highlight {

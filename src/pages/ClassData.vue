@@ -61,6 +61,9 @@
     <!-- 班级信息区域 -->
     <div class="class-info-section" v-if="course">
       <div class="class-info-content">
+        <div class="class-overview-title">
+          <span class="title-text">班级概况</span>
+        </div>
         <span v-if="classList.length > 0">
           当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
           参与班级为: <span class="class-names">{{ displayClassNames }}</span>
@@ -1327,6 +1330,31 @@ export default {
   font-size: 16px;
   line-height: 1.6;
   color: #333;
+}
+
+.class-overview-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  width: fit-content;
+}
+
+.title-icon {
+  font-size: 18px;
+  margin-right: 8px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
 }
 
 .highlight {
