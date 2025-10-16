@@ -172,6 +172,18 @@
         ></v-chart>
       </a-card>
     </div>
+
+    <!-- 第三行图表区域 - 课堂占比饼状图 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">课堂类型占比</div>
+        <v-chart
+          id="classroomTypePieChart"
+          :option="classroomTypePieOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+    </div>
   </div>
 </template>
 
@@ -183,7 +195,7 @@ import service from '@/utils/fetch'
 import { colorList } from "../services/mockData";
 import * as echarts from "echarts";
 import VChart from "vue-echarts";
-import { thirtyOne, thirtyTwo } from "@/api/dayData";
+import { thirtyOne, thirtyTwo, getClassroomAttendance } from "@/api/dayData";
 
 export default {
   name: 'ClassData',
@@ -199,6 +211,8 @@ export default {
       studentData: {},
       headupRate: 0, // 学员抬头率
       classList: [], // 班级列表
+      teacherCount: 0, // 教员人数
+      studentCount: 0, // 学员人数
       // 筛选相关数据
       startDate: null,
       endDate: null,
@@ -556,6 +570,40 @@ export default {
           },
         ],
       },
+      // 课堂类型占比饼状图配置
+      classroomTypePieOptions: {
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b}: {c} ({d}%)"
+        },
+        legend: {
+          top: "5%",
+          left: "center",
+        },
+        series: [
+          {
+            name: "课堂类型占比",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 40,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [],
+          },
+        ],
+      },
       columns: [
         {
           title: '班级名称',
@@ -619,9 +667,9 @@ export default {
       return [
         {
           label: "学员人数",
-          num: this.studentData?.totalStudents || 0,
+          num: this.studentCount || 0,
           label1: "教员人数",
-          num1: this.studentData?.totalTeachers || 0,
+          num1: this.teacherCount || 0,
           color: colorList[0],
         },
         {
@@ -867,11 +915,8 @@ export default {
         // 更新班级数据
         this.classData = response || {}
         
-        // 模拟学员和教员数据（实际项目中应该从其他接口获取）
-        this.studentData = {
-          totalStudents: 0,
-          totalTeachers: 0,
-        }
+        // 获取教员人数和学员人数
+        await this.fetchClassroomAttendance()
         
         // 获取学员抬头率
         await this.fetchHeadupRate()
@@ -897,6 +942,43 @@ export default {
       } catch (error) {
         console.error('获取班级数据出错:', error)
         this.classData = {}
+      }
+    },
+    // 获取教员人数和学员人数
+    async fetchClassroomAttendance() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        // 构建时间范围，模仿今日数据的格式
+        const startTime = `${startDateStr} 00:00:00`
+        const endTime = `${endDateStr} 23:59:59`
+        
+        const response = await getClassroomAttendance({
+          startTime: startTime,
+          endTime: endTime,
+          courseId: courseId
+        })
+        
+        if (response && response.code === 200 && response.result) {
+          this.teacherCount = response.result.teaCount || 0
+          this.studentCount = response.result.stuCount || 0
+        }
+        
+      } catch (error) {
+        console.error('获取教员/学员人数出错:', error)
+        this.teacherCount = 0
+        this.studentCount = 0
       }
     },
     // 获取学员抬头率
@@ -1153,6 +1235,81 @@ export default {
         this.teacherBehaviorOptions.series[0].data = []
       }
     },
+    // 根据RT和CH值判断课堂类型
+    getClassroomType(rt, ch) {
+      // 检查是否在三角形外面
+      if (rt < 0 || rt > 1 || ch < 0 || ch > 1) {
+        return '其他'
+      }
+      
+      // 检查是否在三角形内部
+      // 三角形边界：y = 2x (x <= 0.5) 和 y = -2x + 2 (x >= 0.5)
+      const leftBoundary = 2 * rt 
+      const rightBoundary = -2 * rt + 2 
+
+      console.log("left: ", leftBoundary, "right: ", rightBoundary, "ch: ", ch)
+      
+      if (ch > leftBoundary || ch > rightBoundary) {
+        return '其他'
+      }
+      
+      // 在三角形内部，根据区域判断类型
+      if (ch > 0.5) {
+        // 上半部分：对话型
+        return '对话型'
+      } else {
+        // 下半部分，根据x坐标判断
+        if (rt <= 0.3) {
+          return '练习型'
+        } else if (rt <= 0.7) {
+          return '混合型'
+        } else {
+          return '讲授型'
+        }
+      }
+    },
+    // 计算课堂类型分布
+    calculateClassroomTypeDistribution(dataPoints) {
+      const typeCount = {
+        '对话型': 0,
+        '练习型': 0,
+        '混合型': 0,
+        '讲授型': 0,
+        '其他': 0
+      }
+      
+      // 统计每个类型的数量
+      dataPoints.forEach(point => {
+        const type = this.getClassroomType(point.rt, point.ch)
+        typeCount[type]++
+      })
+      
+      // 计算百分比并生成饼状图数据
+      const total = dataPoints.length
+      const pieData = []
+      
+      Object.keys(typeCount).forEach(type => {
+        if (typeCount[type] > 0) {
+          const percentage = ((typeCount[type] / total) * 100).toFixed(1)
+          pieData.push({
+            name: type,
+            value: typeCount[type],
+            percentage: percentage
+          })
+        }
+      })
+      
+      // 更新饼状图数据
+      this.classroomTypePieOptions.series[0].data = pieData
+      
+      // 手动更新饼状图
+      this.$nextTick(() => {
+        const pieChart = echarts.init(document.getElementById('classroomTypePieChart'))
+        if (pieChart) {
+          pieChart.setOption(this.classroomTypePieOptions)
+        }
+      })
+    },
     // 获取课堂类型数据
     async fetchClassroomTypeData() {
       if (!this.startDate || !this.endDate || !this.course) {
@@ -1189,6 +1346,9 @@ export default {
           // 更新图表数据
           this.classroomTypeOptions.series[0].data = scatterData
           
+          // 计算课堂类型占比
+          this.calculateClassroomTypeDistribution([{ rt: response.rt, ch: response.ch }])
+          
           // 手动更新图表
           this.$nextTick(() => {
             const chart = echarts.init(document.getElementById('classroomTypeChart'))
@@ -1199,10 +1359,15 @@ export default {
         } else {
           // 如果没有数据，显示空图表
           this.classroomTypeOptions.series[0].data = []
+          this.classroomTypePieOptions.series[0].data = []
           this.$nextTick(() => {
             const chart = echarts.init(document.getElementById('classroomTypeChart'))
+            const pieChart = echarts.init(document.getElementById('classroomTypePieChart'))
             if (chart) {
               chart.setOption(this.classroomTypeOptions)
+            }
+            if (pieChart) {
+              pieChart.setOption(this.classroomTypePieOptions)
             }
           })
         }
