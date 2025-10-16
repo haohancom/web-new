@@ -267,6 +267,14 @@
             style="width: 400px; height: 400px; background-color: #f0f0f0"
           ></div>
         </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <div style="margin-top: 10px">情绪分布分析</div>
+          <div
+            id="chart4"
+            style="width: 400px; height: 400px; background-color: #f0f0f0"
+          ></div>
+        </div>
       </div>
     </el-dialog>
     <el-dialog
@@ -696,6 +704,44 @@ export default {
     goHome() {
       this.$router.push("/");
     },
+    
+    // 情绪分类和汇总处理函数
+    processEmotionData(emotionData) {
+      // 定义情绪分类规则
+      const normalEmotions = ['普通/正常', '正常', '平静'];
+      const positiveEmotions = ['微笑', '大笑', '高兴'];
+      const negativeEmotions = ['未知', '愤怒', '悲伤', '厌恶', '害怕', '惊讶', '困惑', '尖叫'];
+      
+      // 初始化汇总数据
+      const summary = {
+        '正常': 0,
+        '积极': 0,
+        '消极': 0
+      };
+      
+      // 遍历原始数据并进行分类汇总
+      emotionData.forEach(item => {
+        const emotionName = item.name;
+        const value = parseInt(item.value) || 0;
+        
+        if (normalEmotions.includes(emotionName)) {
+          summary['正常'] += value;
+        } else if (positiveEmotions.includes(emotionName)) {
+          summary['积极'] += value;
+        } else if (negativeEmotions.includes(emotionName)) {
+          summary['消极'] += value;
+        } else {
+          // 如果情绪名称不在预定义列表中，归类为消极
+          summary['消极'] += value;
+        }
+      });
+      
+      // 转换为图表数据格式
+      return Object.keys(summary).map(key => ({
+        name: key,
+        value: summary[key]
+      })).filter(item => item.value > 0); // 只显示有数据的分类
+    },
     showCompare() {
       if (this.compareList.length > 20) {
         this.$message.warning("最多选择20条");
@@ -873,6 +919,45 @@ export default {
           
           var chart3 = echarts.init(document.getElementById("chart3"));
           chart3.setOption(studentEmotionOptions);
+          
+          // 处理情绪分布分析数据
+          const emotionAnalysisData = this.processEmotionData(data);
+          
+          const emotionAnalysisOptions = {
+            tooltip: {
+              trigger: "item",
+            },
+            legend: {
+              top: "5%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "情绪分布分析",
+                type: "pie",
+                radius: ["40%", "70%"],
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: "center",
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 40,
+                    fontWeight: "bold",
+                  },
+                },
+                labelLine: {
+                  show: false,
+                },
+                data: emotionAnalysisData,
+              },
+            ],
+          };
+          
+          var chart4 = echarts.init(document.getElementById("chart4"));
+          chart4.setOption(emotionAnalysisOptions);
         });
       });
     },
