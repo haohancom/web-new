@@ -121,3 +121,21 @@ export function dzfb(params) {
       params
     })
   }
+
+  //获取发言次数前十对比数据
+  export function thirtyOne(params) {
+    return request({
+      url: '/classData/thirtyOne',
+      method: 'get',
+      params
+    })
+  }
+
+  //获取参与度前十对比数据
+  export function thirtyTwo(params) {
+    return request({
+      url: '/classData/thirtyTwo',
+      method: 'get',
+      params
+    })
+  }

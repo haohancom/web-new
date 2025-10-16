@@ -90,6 +90,35 @@
       </a-card>
     </div>
 
+    <!-- 对比表格区域 -->
+    <div class="comparison-tables">
+      <div class="table-row">
+        <a-card class="comparison-table-card">
+          <div class="table-title">发言次数前十对比</div>
+          <a-table
+            :columns="speakingColumns"
+            :data-source="speakingTopTenData"
+            :pagination="false"
+            size="small"
+            :scroll="{ x: 400 }"
+          >
+          </a-table>
+        </a-card>
+        
+        <a-card class="comparison-table-card">
+          <div class="table-title">参与度前十对比</div>
+          <a-table
+            :columns="participationColumns"
+            :data-source="participationTopTenData"
+            :pagination="false"
+            size="small"
+            :scroll="{ x: 400 }"
+          >
+          </a-table>
+        </a-card>
+      </div>
+    </div>
+
     <!-- 图表区域 -->
     <div class="chart-grid">
       <a-card class="chart-card">
@@ -151,6 +180,7 @@ import service from '@/utils/fetch'
 import { colorList } from "../services/mockData";
 import * as echarts from "echarts";
 import VChart from "vue-echarts";
+import { thirtyOne, thirtyTwo } from "@/api/dayData";
 
 export default {
   name: 'ClassData',
@@ -172,6 +202,33 @@ export default {
       course: null,
       courseList: [],
       courseMapping: {}, // 存储课程名到courseId的映射
+      // 对比表格数据
+      speakingTopTenData: [], // 发言次数前十对比数据
+      participationTopTenData: [], // 参与度前十对比数据
+      lastTimeRange: null, // 记录上次的时间范围，用于判断是否需要重新渲染
+      // 表格列配置
+      speakingColumns: [
+        { title: '课程名称', dataIndex: 'courseName', key: 'courseName', width: 300 },
+        { 
+          title: '发言次数', 
+          dataIndex: 'count', 
+          key: 'count', 
+          width: 150, 
+          align: 'right',
+          customRender: ({ record }) => Number(record.count).toLocaleString()
+        }
+      ],
+      participationColumns: [
+        { title: '课程名称', dataIndex: 'courseName', key: 'courseName', width: 300 },
+        { 
+          title: '参与度', 
+          dataIndex: 'rate', 
+          key: 'rate', 
+          width: 150, 
+          align: 'right',
+          customRender: ({ record }) => `${Number(record.rate).toFixed(1)}%`
+        }
+      ],
       // 图表相关数据
       studentActionOptions: {
         tooltip: {
@@ -693,9 +750,83 @@ export default {
           this.courseList = []
           this.courseMapping = {}
         }
+        
+        // 获取对比表格数据（只在时间改变时调用）
+        await this.fetchComparisonData()
       } catch (error) {
         console.error('获取课程列表出错:', error)
         this.courseList = []
+      }
+    },
+    
+    // 获取对比表格数据
+    async fetchComparisonData() {
+      if (!this.startDate || !this.endDate) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const currentTimeRange = `${startDateStr}_${endDateStr}`
+        
+        // 检查时间是否改变，只有时间改变时才重新获取数据
+        if (this.lastTimeRange === currentTimeRange) {
+          return
+        }
+        
+        this.lastTimeRange = currentTimeRange
+        
+        // 获取发言次数前十对比数据
+        const speakingResponse = await thirtyOne({
+          startDate: startDateStr,
+          endDate: endDateStr
+        })
+        
+        // 获取参与度前十对比数据
+        const participationResponse = await thirtyTwo({
+          startDate: startDateStr,
+          endDate: endDateStr
+        })
+        
+        console.log('发言次数接口返回:', speakingResponse)
+        console.log('参与度接口返回:', participationResponse)
+        
+        // 处理发言次数数据
+        if (speakingResponse && typeof speakingResponse === 'object') {
+          this.speakingTopTenData = Object.entries(speakingResponse)
+            .map(([courseName, count]) => ({
+              courseName,
+              count: Number(count)
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10) // 只取前10名
+          console.log('处理后的发言次数数据:', this.speakingTopTenData)
+        } else {
+          console.log('发言次数数据格式不正确:', speakingResponse)
+          this.speakingTopTenData = []
+        }
+        
+        // 处理参与度数据
+        if (participationResponse && typeof participationResponse === 'object') {
+          this.participationTopTenData = Object.entries(participationResponse)
+            .map(([courseName, rate]) => ({
+              courseName,
+              //todo: 下面这行后面加百分号, 只保留一位小数
+              rate: Number(rate).toFixed(1) + '%' // 保持原始数值
+            }))
+            .sort((a, b) => b.rate - a.rate)
+            .slice(0, 10) // 只取前10名
+          console.log('处理后的参与度数据:', this.participationTopTenData)
+        } else {
+          console.log('参与度数据格式不正确:', participationResponse)
+          this.participationTopTenData = []
+        }
+        
+      } catch (error) {
+        console.error('获取对比数据出错:', error)
+        this.speakingTopTenData = []
+        this.participationTopTenData = []
       }
     },
     // 获取班级数据
@@ -1115,6 +1246,29 @@ export default {
   font-weight: bold;
 }
 
+
+/* 对比表格样式 */
+.comparison-tables {
+  margin-bottom: 20px;
+}
+
+.table-row {
+  display: flex;
+  gap: 20px;
+}
+
+.comparison-table-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.table-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+}
 
 /* 筛选框样式 */
 .filter-section {
