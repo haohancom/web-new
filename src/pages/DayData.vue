@@ -143,7 +143,7 @@ import * as echarts from "echarts";
 import { h } from "vue";
 import VChart from "vue-echarts";
 import { colorList } from "../services/mockData";
-import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx, twentyOne } from "@/api/dayData";
+import { dzfb, jydz, fycs, fyqs, cydz,jrgk,bjgk,xfqx, twentyOne, getClassroomAttendance } from "@/api/dayData";
 import { xscq } from "../api/dayData";
 
 export default {
@@ -156,6 +156,8 @@ export default {
     return {
       headupRate:0,
      stAttRate:50,
+      teacherCount: 0, // 教员人数
+      studentCount: 0, // 学员人数
       studentActionOptions: {
         tooltip: {
           trigger: "item",
@@ -478,9 +480,9 @@ export default {
       return [
         {
           label: "学员人数",
-          num: this.studentData?.totalStudents || 0,
+          num: this.studentCount,
           label1: "教员人数",
-          num1: this.studentData?.totalTeachers || 0,
+          num1: this.teacherCount,
           color: colorList[0],
         },
         {
@@ -558,11 +560,66 @@ export default {
   },
   methods: {
     showChart() {},
+    
+    // 获取昨天和今天的零点时间
+    getTimeRange() {
+      const now = new Date();
+      
+      // 获取今天的日期（年月日）
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // 获取昨天的日期（年月日）
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      
+      // 昨天零点
+      const startTime = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
+      
+      // 今天零点
+      const endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+      
+      // 格式化为 YYYY-MM-DD HH:mm:ss 格式
+      const formatDateTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      };
+      
+      const result = {
+        startTime: formatDateTime(startTime),
+        endTime: formatDateTime(endTime)
+      };
+      
+      // 调试信息
+      console.log('当前时间:', formatDateTime(now));
+      console.log('昨天零点:', result.startTime);
+      console.log('今天零点:', result.endTime);
+      
+      return result;
+    },
     getData() {
       //今日数据概况
       jrgk({}).then((res) =>{
                    this.todayData = res
       })
+
+      // 获取教员人数和学员人数
+      const timeRange = this.getTimeRange();
+      getClassroomAttendance({
+        startTime: timeRange.startTime,
+        endTime: timeRange.endTime
+      }).then((res) => {
+        if (res && res.code === 200 && res.result) {
+          this.teacherCount = res.result.teaCount || 0;
+          this.studentCount = res.result.stuCount || 0;
+        }
+      }).catch((error) => {
+        console.error('获取教员/学员人数失败:', error);
+      });
 
 
       //学员动作分布

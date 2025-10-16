@@ -89,3 +89,26 @@ export function dzfb(params) {
       params
     })
   }
+
+  //获取教员人数和学员人数
+  export function getClassroomAttendance(params) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // 构建查询参数
+        const queryString = new URLSearchParams(params).toString();
+        const url = `/qt/course/dock/getClassroomAttendance${queryString ? '?' + queryString : ''}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }

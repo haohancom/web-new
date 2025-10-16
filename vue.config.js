@@ -17,6 +17,13 @@ module.exports = defineConfig({
           '^/api': ''
         }
       },
+      
+      // 代理getClassroomAttendance接口
+      '/qt': {
+        target: 'http://220.180.237.78:8181',
+        changeOrigin: true,
+        secure: false
+      }
 
     },
     host: "0.0.0.0",
