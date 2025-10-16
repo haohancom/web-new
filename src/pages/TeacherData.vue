@@ -133,13 +133,22 @@
       </a-card>
     </div>
 
-    <!-- 课堂类型图和我的行为动作分布图 -->
-    <div class="chart-grid">
+    <!-- 课堂类型图、课堂类型占比图和我的行为动作分布图 -->
+    <div class="chart-grid-three">
       <a-card class="chart-card">
         <div class="chart-title">课堂类型</div>
         <v-chart
           id="teacherCourseScatterChart"
           :option="courseScatterOptions"
+          style="height: 350px"
+        ></v-chart>
+      </a-card>
+
+      <a-card class="chart-card">
+        <div class="chart-title">课堂类型占比</div>
+        <v-chart
+          id="teacherClassroomTypePieChart"
+          :option="classroomTypePieOptions"
           style="height: 350px"
         ></v-chart>
       </a-card>
@@ -166,6 +175,7 @@ import { getTeacher, getTeacherDetail, getTeacherHeadupRate, getTeacherStudentAc
 import { colorList } from '../services/mockData'
 import * as echarts from "echarts"
 import VChart from "vue-echarts"
+import { getClassroomType, calculateClassroomTypeDistribution, createClassroomTypePieOptions } from '@/utils/classroomTypeUtils'
 
 export default {
   name: 'TeacherData',
@@ -571,6 +581,8 @@ export default {
           },
         ],
       },
+      // 课堂类型占比饼状图配置
+      classroomTypePieOptions: createClassroomTypePieOptions(),
     }
   },
   computed: {
@@ -1040,6 +1052,9 @@ export default {
         // 更新图表数据
         this.courseScatterOptions.series[0].data = scatterData
         
+        // 计算课堂类型占比
+        this.calculateTeacherClassroomTypeDistribution(scatterData)
+        
         // 手动更新图表
         this.$nextTick(() => {
           const chart = echarts.init(document.getElementById('teacherCourseScatterChart'))
@@ -1104,6 +1119,28 @@ export default {
         this.teacherBehaviorOptions.series[0].data = []
         this.myBehaviorOptions.series[0].data = []
       }
+    },
+    // 计算教员课堂类型分布
+    calculateTeacherClassroomTypeDistribution(scatterData) {
+      // 将散点图数据转换为计算函数需要的格式
+      const dataPoints = scatterData.map(item => ({
+        rt: item.value[0],
+        ch: item.value[1]
+      }))
+      
+      // 使用通用函数计算分布
+      const pieData = calculateClassroomTypeDistribution(dataPoints)
+      
+      // 更新饼状图数据
+      this.classroomTypePieOptions.series[0].data = pieData
+      
+      // 手动更新饼状图
+      this.$nextTick(() => {
+        const pieChart = echarts.init(document.getElementById('teacherClassroomTypePieChart'))
+        if (pieChart) {
+          pieChart.setOption(this.classroomTypePieOptions)
+        }
+      })
     }
   }
 }
@@ -1223,14 +1260,27 @@ export default {
   margin-bottom: 20px;
 }
 
+.chart-grid-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
 @media (max-width: 1200px) {
   .chart-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .chart-grid-three {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
   .chart-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-grid-three {
     grid-template-columns: 1fr;
   }
 }
