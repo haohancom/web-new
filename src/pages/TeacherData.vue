@@ -43,8 +43,13 @@
             placeholder="请先选择日期"
             :disabled="!canSelectTeacher"
             @change="onTeacherChange"
+            @search="onTeacherSearch"
+            @clear="onTeacherClear"
             class="teacher-select"
             style="width: 200px"
+            show-search
+            allow-clear
+            :loading="teacherSearchLoading"
           >
             <a-select-option
               v-for="teacherName in teacherList"
@@ -214,6 +219,7 @@ export default {
       teacher: null,
       teacherList: [],
       teacherMapping: {}, // 存储教员名到teacherId的映射
+      teacherSearchLoading: false, // 教员搜索加载状态
       // 教员详情数据
       teacherDetail: {},
       // 教员抬头率数据
@@ -822,6 +828,61 @@ export default {
       } catch (error) {
         console.error('获取教员列表出错:', error)
         this.teacherList = []
+      }
+    },
+    // 教员搜索方法
+    async onTeacherSearch(value) {
+      if (!value || value.trim() === '' || !this.canSelectTeacher) {
+        // 如果搜索值为空或不能选择教员，获取完整列表
+        await this.fetchTeacherList()
+        return
+      }
+      
+      this.teacherSearchLoading = true
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        
+        const response = await service({
+          method: 'get',
+          url: '/aiClass/queryTeacher',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            search: value // 添加搜索参数
+          }
+        })
+        
+        // 处理响应格式：{"teacherId":"{teacherName}","teacherId":"{teacherName}"}
+        if (response && typeof response === 'object') {
+          // 过滤包含搜索关键词的教员
+          const filteredTeachers = Object.entries(response).filter(([teacherId, teacherName]) => 
+            teacherName.toLowerCase().includes(value.toLowerCase())
+          )
+          
+          this.teacherList = filteredTeachers.map(([teacherId, teacherName]) => teacherName)
+          // 保存教员名到teacherId的映射
+          this.teacherMapping = {}
+          filteredTeachers.forEach(([teacherId, teacherName]) => {
+            this.teacherMapping[teacherName] = teacherId
+          })
+        } else {
+          this.teacherList = []
+          this.teacherMapping = {}
+        }
+      } catch (error) {
+        console.error('搜索教员出错:', error)
+        this.teacherList = []
+      } finally {
+        this.teacherSearchLoading = false
+      }
+    },
+    // 教员清空搜索方法
+    async onTeacherClear() {
+      this.teacher = null
+      // 清空后立即重新获取完整列表
+      if (this.canSelectTeacher) {
+        await this.fetchTeacherList()
       }
     },
     // 获取tooltip内容

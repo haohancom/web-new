@@ -43,8 +43,13 @@
             placeholder="请先选择日期"
             :disabled="!canSelectCourse"
             @change="onCourseChange"
+            @search="onCourseSearch"
+            @clear="onCourseClear"
             class="course-select"
             style="width: 200px"
+            show-search
+            allow-clear
+            :loading="courseSearchLoading"
           >
             <a-select-option
               v-for="courseName in courseList"
@@ -227,6 +232,7 @@ export default {
       course: null,
       courseList: [],
       courseMapping: {}, // 存储课程名到courseId的映射
+      courseSearchLoading: false, // 课程搜索加载状态
       // 对比表格数据
       speakingTopTenData: [], // 发言次数前十对比数据
       participationTopTenData: [], // 参与度前十对比数据
@@ -1329,6 +1335,61 @@ export default {
       }
     },
     
+    // 课程搜索方法
+    async onCourseSearch(value) {
+      if (!value || value.trim() === '' || !this.canSelectCourse) {
+        // 如果搜索值为空或不能选择课程，获取完整列表
+        await this.fetchCourseList()
+        return
+      }
+      
+      this.courseSearchLoading = true
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        
+        const response = await service({
+          method: 'get',
+          url: '/aiClass/queryCourse',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            search: value // 添加搜索参数
+          }
+        })
+        
+        // 处理响应格式：{"courseId":"{courseName}","courseId":"{courseName}"}
+        if (response && typeof response === 'object') {
+          // 过滤包含搜索关键词的课程
+          const filteredCourses = Object.entries(response).filter(([courseId, courseName]) => 
+            courseName.toLowerCase().includes(value.toLowerCase())
+          )
+          
+          this.courseList = filteredCourses.map(([courseId, courseName]) => courseName)
+          // 保存课程名到courseId的映射
+          this.courseMapping = {}
+          filteredCourses.forEach(([courseId, courseName]) => {
+            this.courseMapping[courseName] = courseId
+          })
+        } else {
+          this.courseList = []
+          this.courseMapping = {}
+        }
+      } catch (error) {
+        console.error('搜索课程出错:', error)
+        this.courseList = []
+      } finally {
+        this.courseSearchLoading = false
+      }
+    },
+    // 课程清空搜索方法
+    async onCourseClear() {
+      this.course = null
+      // 清空后立即重新获取完整列表
+      if (this.canSelectCourse) {
+        await this.fetchCourseList()
+      }
+    },
     // 获取tooltip内容
     getTooltipContent(label) {
       if (label === '学员参与度') {

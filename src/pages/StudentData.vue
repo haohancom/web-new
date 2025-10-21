@@ -43,8 +43,13 @@
             placeholder="请先选择日期"
             :disabled="!canSelectStudentClass"
             @change="onStudentClassChange"
+            @search="onStudentClassSearch"
+            @clear="onStudentClassClear"
             class="student-class-select"
             style="width: 200px"
+            show-search
+            allow-clear
+            :loading="studentClassSearchLoading"
           >
             <a-select-option
               v-for="className in studentClassList"
@@ -175,6 +180,7 @@ export default {
       studentClass: null,
       studentClassList: [],
       studentClassMapping: {}, // 存储班级名到studentClassId的映射
+      studentClassSearchLoading: false, // 学员班级搜索加载状态
       // 学员班级详情数据
       studentClassDetail: {},
       // 学员班级抬头率数据
@@ -630,6 +636,61 @@ export default {
         
       } catch (error) {
         console.error('更新课程进度图数据出错:', error)
+      }
+    },
+    // 学员班级搜索方法
+    async onStudentClassSearch(value) {
+      if (!value || value.trim() === '' || !this.canSelectStudentClass) {
+        // 如果搜索值为空或不能选择学员班级，获取完整列表
+        await this.fetchStudentClassList()
+        return
+      }
+      
+      this.studentClassSearchLoading = true
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        
+        const response = await service({
+          method: 'get',
+          url: '/aiClass/queryStudentClass',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            search: value // 添加搜索参数
+          }
+        })
+        
+        // 处理响应格式：{"studentClassId":"{studentClassName}","studentClassId":"{studentClassName}"}
+        if (response && typeof response === 'object') {
+          // 过滤包含搜索关键词的学员班级
+          const filteredStudentClasses = Object.entries(response).filter(([studentClassId, studentClassName]) => 
+            studentClassName.toLowerCase().includes(value.toLowerCase())
+          )
+          
+          this.studentClassList = filteredStudentClasses.map(([studentClassId, studentClassName]) => studentClassName)
+          // 保存班级名到studentClassId的映射
+          this.studentClassMapping = {}
+          filteredStudentClasses.forEach(([studentClassId, studentClassName]) => {
+            this.studentClassMapping[studentClassName] = studentClassId
+          })
+        } else {
+          this.studentClassList = []
+          this.studentClassMapping = {}
+        }
+      } catch (error) {
+        console.error('搜索学员班级出错:', error)
+        this.studentClassList = []
+      } finally {
+        this.studentClassSearchLoading = false
+      }
+    },
+    // 学员班级清空搜索方法
+    async onStudentClassClear() {
+      this.studentClass = null
+      // 清空后立即重新获取完整列表
+      if (this.canSelectStudentClass) {
+        await this.fetchStudentClassList()
       }
     },
     // 绘制水波图
