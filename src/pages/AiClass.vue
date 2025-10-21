@@ -286,44 +286,43 @@
       </div>
       
       <!-- 图表区域 -->
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 20px;
-        "
-      >
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <div style="margin-top: 10px">学生动作</div>
-          <div
-            id="chart1"
-            style="width: 400px; height: 400px; background-color: #f0f0f0"
-          ></div>
+      <div style="display: flex; flex-direction: column; gap: 30px;">
+        <!-- 第一行：学生动作和教师动作 -->
+        <div style="display: flex; justify-content: space-around; gap: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;">学生动作</div>
+            <div
+              id="chart1"
+              style="width: 400px; height: 400px; background-color: #f0f0f0"
+            ></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;">教师动作</div>
+            <div
+              id="chart2"
+              style="width: 400px; height: 400px; background-color: #f0f0f0"
+            ></div>
+          </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <div style="margin-top: 10px">教师动作</div>
-          <div
-            id="chart2"
-            style="width: 400px; height: 400px; background-color: #f0f0f0"
-          ></div>
-        </div>
+        <!-- 第二行：学生情绪和情绪分布分析 -->
+        <div style="display: flex; justify-content: space-around; gap: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;">学生情绪</div>
+            <div
+              id="chart3"
+              style="width: 400px; height: 400px; background-color: #f0f0f0"
+            ></div>
+          </div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <div style="margin-top: 10px">学生情绪</div>
-          <div
-            id="chart3"
-            style="width: 400px; height: 400px; background-color: #f0f0f0"
-          ></div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <div style="margin-top: 10px">情绪分布分析</div>
-          <div
-            id="chart4"
-            style="width: 400px; height: 400px; background-color: #f0f0f0"
-          ></div>
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;">情绪分布分析</div>
+            <div
+              id="chart4"
+              style="width: 400px; height: 400px; background-color: #f0f0f0"
+            ></div>
+          </div>
         </div>
       </div>
     </el-dialog>
