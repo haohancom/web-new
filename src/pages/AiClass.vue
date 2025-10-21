@@ -282,13 +282,6 @@
             show-overflow-tooltip
             min-width="200"
           ></el-table-column>
-          <el-table-column
-            prop="className"
-            label="班级"
-            align="center"
-            show-overflow-tooltip
-            min-width="150"
-          ></el-table-column>
         </el-table>
       </div>
       
@@ -1831,9 +1824,15 @@ export default {
       console.log('loadFaceStuList 被调用，参数:', row);
       this.faceStuListLoading = true;
       try {
+        // 处理日期和时间格式
+        // classDate: 2025-10-08 -> 2025-10-08 00:00:00
+        // classTime: 14:00 -> 2025-10-08 14:00:00
+        const formattedClassDate = `${row.classDate} 00:00:00`;
+        const formattedClassTime = `${row.classDate} ${row.classTime}:00`;
+        
         const params = new URLSearchParams({
-          classDate: row.classDate,
-          classTime: row.classTime,
+          classDate: formattedClassDate,
+          classTime: formattedClassTime,
           courseId: row.courseId,
           course: row.course,
           teacherId: row.teacherId,
@@ -1846,7 +1845,7 @@ export default {
         console.log('getFaceStuList 响应:', data);
         
         if (data.code === 200) {
-          this.faceStuListData = data.result || [];
+          this.faceStuListData = data.result.list || [];
           console.log('学生列表数据:', this.faceStuListData);
         } else {
           this.$message.warning("暂无学生列表数据");
