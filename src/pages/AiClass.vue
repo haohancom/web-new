@@ -301,6 +301,17 @@
       @close="resetAddClassForm"
     >
       <el-form :model="addClassForm" :rules="addClassRules" ref="addClassForm" label-width="100px">
+        <!-- 授课标题 -->
+        <el-form-item label="*授课标题:" prop="title">
+          <el-input
+            v-model="addClassForm.title"
+            placeholder="请输入授课标题"
+            style="width: 100%"
+            maxlength="100"
+            show-word-limit
+          ></el-input>
+        </el-form-item>
+        
         <!-- 教学模式 -->
         <el-form-item label="教学模式:" prop="faceTeachType">
           <el-select v-model="addClassForm.faceTeachType" placeholder="请选择教学模式" style="width: 100%">
@@ -733,6 +744,7 @@ export default {
       // 新增课堂相关数据
       addClassDialogVisible: false,
       addClassForm: {
+        title: '',
         faceTeachType: null,
         teacherId: '',
         courseId: '',
@@ -746,6 +758,7 @@ export default {
         customEndSection: null
       },
       addClassRules: {
+        title: [{ required: true, message: '请输入授课标题', trigger: 'blur' }],
         faceTeachType: [{ required: true, message: '请选择教学模式', trigger: 'change' }],
         teacherId: [{ required: true, message: '请选择教师', trigger: 'change' }],
         courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
@@ -1204,6 +1217,7 @@ export default {
     
     resetAddClassForm() {
       this.addClassForm = {
+        title: '',
         faceTeachType: null,
         teacherId: '',
         courseId: '',
@@ -1360,6 +1374,7 @@ export default {
         
         // 构建提交数据
         const submitData = {
+          title: this.addClassForm.title,
           courseId: this.addClassForm.courseId,
           openCourseId: this.addClassForm.openCourseId,
           startDate: this.formatDateTime(this.addClassForm.date, this.addClassForm.startTime),
@@ -1372,6 +1387,7 @@ export default {
         
         // 验证必填字段
         const requiredFields = {
+          title: '授课标题',
           courseId: '课程',
           openCourseId: '开课',
           classIds: '班级',
@@ -1380,9 +1396,18 @@ export default {
         };
         
         for (const [key, name] of Object.entries(requiredFields)) {
-          if (!submitData[key] || (Array.isArray(submitData[key]) && submitData[key].length === 0)) {
-            this.$message.error(`请选择${name}`);
-            return;
+          if (key === 'title') {
+            // 授课标题是字符串，需要检查是否为空字符串
+            if (!submitData[key] || submitData[key].trim() === '') {
+              this.$message.error(`请输入${name}`);
+              return;
+            }
+          } else {
+            // 其他字段的验证逻辑
+            if (!submitData[key] || (Array.isArray(submitData[key]) && submitData[key].length === 0)) {
+              this.$message.error(`请选择${name}`);
+              return;
+            }
           }
         }
         
