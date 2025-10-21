@@ -83,7 +83,17 @@
         :style="{ '--card-color': item.color }"
       >
         <div class="card-number">
-          {{ item.num }}
+          <span>{{ item.num }}</span>
+          <a-tooltip
+            v-if="item.hasTooltip"
+            placement="top"
+            :mouseEnterDelay="0"
+          >
+            <template #title>
+              <div v-html="getTooltipContent(item.label)"></div>
+            </template>
+            <span class="participation-help-icon">?</span>
+          </a-tooltip>
         </div>
         <div class="card-title">
           {{ item.label }}
@@ -654,6 +664,9 @@ export default {
       },
       // 课堂类型占比饼状图配置
       classroomTypePieOptions: createClassroomTypePieOptions(),
+      // 兴奋度提示信息
+      excitementTooltip: '',
+      excitementTooltipHtml: '',
     }
   },
   computed: {
@@ -700,6 +713,7 @@ export default {
             ? `${Number(this.teacherDetail.studentExcitementRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[2],
+          hasTooltip: true,
         },
         {
           label: "学员抬头率",
@@ -759,6 +773,9 @@ export default {
     onTeacherChange(value) {
       this.teacher = value
       console.log('选择的教员:', value)
+      // 清空提示信息
+      this.excitementTooltip = ''
+      this.excitementTooltipHtml = ''
       // 选择教员后可以在这里添加获取教员数据的逻辑
       if (value) {
         this.fetchTeacherData()
@@ -807,6 +824,14 @@ export default {
         this.teacherList = []
       }
     },
+    // 获取tooltip内容
+    getTooltipContent(label) {
+      if (label === '学员兴奋度') {
+        return this.excitementTooltipHtml
+      }
+      return ''
+    },
+    
     // 获取教员数据
     async fetchTeacherData() {
       if (!this.startDate || !this.endDate || !this.teacher) {
@@ -862,6 +887,9 @@ export default {
         
         // 获取我的行为动作分布数据（次数）
         await this.fetchMyBehaviorCountData()
+        
+        // 获取兴奋度统计数据
+        await this.loadExcitementData()
         
       } catch (error) {
         console.error('获取教员数据出错:', error)
@@ -1313,6 +1341,56 @@ export default {
         this.myBehaviorOptions.xAxis.data = []
         this.myBehaviorOptions.series[0].data = []
       }
+    },
+    
+    // 加载兴奋度数据
+    async loadExcitementData() {
+      if (!this.startDate || !this.endDate || !this.teacher) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const teacherId = this.teacherMapping[this.teacher]
+        
+        if (!teacherId) {
+          console.error('未找到对应的teacherId:', this.teacher)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/teacherData/fortySeven',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            teacherId: teacherId
+          }
+        })
+        
+        if (response) {
+          // 格式化提示信息
+          this.excitementTooltip = `${startDateStr} 日-${endDateStr} 日期间, ${this.teacher}老师 共开展了 ${response.count} 节课, 其中课程兴奋度最高的一节课发生在 ${response.maxDate} 日, 兴奋度为${response.maxRate}%, 兴奋度最低的一节课发生在 ${response.minDate} 日, 兴奋度为 ${response.minRate}%`;
+          
+          // 生成带样式的HTML提示信息
+          this.excitementTooltipHtml = `
+            <div style="line-height: 1.6; font-size: 13px;">
+              <span style="color: #666;">${startDateStr} 日-${endDateStr} 日期间</span>, 
+              <span style="color: #1890ff; font-weight: bold;">${this.teacher}老师</span> 
+              共开展了 <span style="color: #ff4d4f; font-weight: bold;">${response.count}</span> 节课, 
+              其中课程兴奋度最高的一节课发生在 
+              <span style="color: #52c41a; font-weight: bold;">${response.maxDate}</span> 日, 
+              兴奋度为<span style="color: #52c41a; font-weight: bold;">${response.maxRate}%</span>, 
+              兴奋度最低的一节课发生在 
+              <span style="color: #ff7875; font-weight: bold;">${response.minDate}</span> 日, 
+              兴奋度为 <span style="color: #ff7875; font-weight: bold;">${response.minRate}%</span>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('获取兴奋度数据失败:', error)
+      }
     }
   }
 }
@@ -1582,6 +1660,37 @@ export default {
   background: #1890ff;
   left: 0;
   top: 0;
+}
+
+/* 参与度帮助图标样式 */
+.participation-help-icon {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+  text-align: center !important;
+  border-radius: 50% !important;
+  background-color: #409eff !important;
+  color: white !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  margin-left: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.participation-help-icon:hover {
+  background-color: #66b1ff !important;
+  transform: scale(1.1) !important;
+}
+
+.card-number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>
 
