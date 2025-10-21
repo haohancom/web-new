@@ -91,7 +91,7 @@
             :mouseEnterDelay="0"
           >
             <template #title>
-              <div v-html="participationTooltipHtml"></div>
+              <div v-html="getTooltipContent(item.label)"></div>
             </template>
             <span class="participation-help-icon">?</span>
           </a-tooltip>
@@ -583,6 +583,9 @@ export default {
       // 参与度提示信息
       participationTooltip: '',
       participationTooltipHtml: '',
+      // 兴奋度提示信息
+      excitementTooltip: '',
+      excitementTooltipHtml: '',
       columns: [
         {
           title: '班级名称',
@@ -665,6 +668,7 @@ export default {
             ? `${Number(this.classData.studentExcitementRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[2],
+          hasTooltip: true,
         },
         {
           label: "学员抬头率",
@@ -751,6 +755,8 @@ export default {
       // 清空提示信息
       this.participationTooltip = ''
       this.participationTooltipHtml = ''
+      this.excitementTooltip = ''
+      this.excitementTooltipHtml = ''
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -924,6 +930,9 @@ export default {
         
         // 获取参与度统计数据
         await this.loadParticipationData()
+        
+        // 获取兴奋度统计数据
+        await this.loadExcitementData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -1320,6 +1329,16 @@ export default {
       }
     },
     
+    // 获取tooltip内容
+    getTooltipContent(label) {
+      if (label === '学员参与度') {
+        return this.participationTooltipHtml
+      } else if (label === '学员兴奋度') {
+        return this.excitementTooltipHtml
+      }
+      return ''
+    },
+    
     // 加载参与度数据
     async loadParticipationData() {
       if (!this.startDate || !this.endDate || !this.course) {
@@ -1367,6 +1386,56 @@ export default {
         }
       } catch (error) {
         console.error('获取参与度数据失败:', error)
+      }
+    },
+    
+    // 加载兴奋度数据
+    async loadExcitementData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/thirtyFour',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        if (response) {
+          // 格式化提示信息
+          this.excitementTooltip = `${startDateStr} 日-${endDateStr} 日期间, ${this.course} 共开展了 ${response.count} 节课, 其中课程兴奋度最高的一节课发生在 ${response.maxDate} 日, 兴奋度为${response.maxRate}%, 兴奋度最低的一节课发生在 ${response.minDate} 日, 兴奋度为 ${response.minRate}%`;
+          
+          // 生成带样式的HTML提示信息
+          this.excitementTooltipHtml = `
+            <div style="line-height: 1.6; font-size: 13px;">
+              <span style="color: #666;">${startDateStr} 日-${endDateStr} 日期间</span>, 
+              <span style="color: #1890ff; font-weight: bold;">${this.course}</span> 
+              共开展了 <span style="color: #ff4d4f; font-weight: bold;">${response.count}</span> 节课, 
+              其中课程兴奋度最高的一节课发生在 
+              <span style="color: #52c41a; font-weight: bold;">${response.maxDate}</span> 日, 
+              兴奋度为<span style="color: #52c41a; font-weight: bold;">${response.maxRate}%</span>, 
+              兴奋度最低的一节课发生在 
+              <span style="color: #ff7875; font-weight: bold;">${response.minDate}</span> 日, 
+              兴奋度为 <span style="color: #ff7875; font-weight: bold;">${response.minRate}%</span>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('获取兴奋度数据失败:', error)
       }
     }
   }
