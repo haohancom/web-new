@@ -84,11 +84,21 @@
       >
         <div class="card-number">
           <span v-if="item.label1">{{ item.num1 }} / </span>
-          {{ item.num }}
+          <span>{{ item.num }}</span>
+          <a-tooltip
+            v-if="item.hasTooltip"
+            placement="top"
+            :mouseEnterDelay="0"
+          >
+            <template #title>
+              <div v-html="participationTooltipHtml"></div>
+            </template>
+            <span class="participation-help-icon">?</span>
+          </a-tooltip>
         </div>
         <div class="card-title">
           <span v-if="item.label1">{{ item.label1 }} / </span>
-          {{ item.label }}
+          <span>{{ item.label }}</span>
         </div>
       </a-card>
     </div>
@@ -570,6 +580,9 @@ export default {
       },
       // 课堂类型占比饼状图配置
       classroomTypePieOptions: createClassroomTypePieOptions(),
+      // 参与度提示信息
+      participationTooltip: '',
+      participationTooltipHtml: '',
       columns: [
         {
           title: '班级名称',
@@ -644,6 +657,7 @@ export default {
             ? `${Number(this.classData.studentEngagementRate).toFixed(1)}%`
             : "0.0%",
           color: colorList[1],
+          hasTooltip: true,
         },
         {
           label: "学员兴奋度",
@@ -734,6 +748,9 @@ export default {
       this.studentTypeOptions.series[0].data = []
       this.teacherBehaviorOptions.series[0].data = []
       this.classroomTypeOptions.series[0].data = []
+      // 清空提示信息
+      this.participationTooltip = ''
+      this.participationTooltipHtml = ''
       // 选择课程后获取班级数据
       if (value) {
         this.fetchClassData()
@@ -904,6 +921,9 @@ export default {
         
         // 获取课堂类型数据
         await this.fetchClassroomTypeData()
+        
+        // 获取参与度统计数据
+        await this.loadParticipationData()
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
@@ -1298,6 +1318,56 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    
+    // 加载参与度数据
+    async loadParticipationData() {
+      if (!this.startDate || !this.endDate || !this.course) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const courseId = this.courseMapping[this.course]
+        
+        if (!courseId) {
+          console.error('未找到对应的courseId:', this.course)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/classData/thirtyThree',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            courseId: courseId
+          }
+        })
+        
+        if (response) {
+          // 格式化提示信息
+          this.participationTooltip = `${startDateStr} 日-${endDateStr} 日期间, ${this.course} 共开展了 ${response.count} 节课, 其中课程参与度最高的一节课发生在 ${response.maxDate} 日, 参与度为${response.maxRate}%, 参与度最低的一节课发生在 ${response.minDate} 日, 参与度为 ${response.minRate}%`;
+          
+          // 生成带样式的HTML提示信息
+          this.participationTooltipHtml = `
+            <div style="line-height: 1.6; font-size: 13px;">
+              <span style="color: #666;">${startDateStr} 日-${endDateStr} 日期间</span>, 
+              <span style="color: #1890ff; font-weight: bold;">${this.course}</span> 
+              共开展了 <span style="color: #ff4d4f; font-weight: bold;">${response.count}</span> 节课, 
+              其中课程参与度最高的一节课发生在 
+              <span style="color: #52c41a; font-weight: bold;">${response.maxDate}</span> 日, 
+              参与度为<span style="color: #52c41a; font-weight: bold;">${response.maxRate}%</span>, 
+              参与度最低的一节课发生在 
+              <span style="color: #ff7875; font-weight: bold;">${response.minDate}</span> 日, 
+              参与度为 <span style="color: #ff7875; font-weight: bold;">${response.minRate}%</span>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('获取参与度数据失败:', error)
+      }
     }
   }
 }
@@ -1559,5 +1629,41 @@ export default {
   background: #1890ff;
   left: 0;
   top: 0;
+}
+
+/* 参与度帮助图标样式 */
+.participation-help-icon {
+  display: inline-block !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+  text-align: center !important;
+  border-radius: 50% !important;
+  background-color: #409eff !important;
+  color: white !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  margin-left: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.participation-help-icon:hover {
+  background-color: #66b1ff !important;
+  transform: scale(1.1) !important;
+}
+
+.card-number {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
 }
 </style>
