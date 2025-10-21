@@ -101,6 +101,14 @@
         >
           新增课堂
         </a-button>
+        <a-button
+          type="primary"
+          @click="showCourseListDialog"
+          class="back-button"
+          style="background-color: #52c41a; border-color: #52c41a;"
+        >
+          进行课程
+        </a-button>
       </div>
     </div>
 
@@ -478,6 +486,166 @@
         <el-button type="primary" @click="submitAddClass">确定</el-button>
       </div>
     </el-dialog>
+    
+    <!-- 课程列表弹窗 -->
+    <el-dialog
+      :visible.sync="courseListDialogVisible"
+      title="课程列表"
+      width="80%"
+      @close="resetCourseListForm"
+    >
+      <div class="course-filter-section">
+        <div class="course-filter-row">
+          <div class="course-filter-item">
+            <label class="course-filter-label">课堂标题：</label>
+            <el-input
+              v-model="courseListForm.title"
+              placeholder="请输入课堂标题进行搜索"
+              style="width: 300px"
+              clearable
+            ></el-input>
+          </div>
+          <a-button type="primary" @click="searchCourses" class="back-button">
+            搜索
+          </a-button>
+        </div>
+      </div>
+      
+      <el-table
+        :data="courseListData"
+        stripe
+        height="400"
+        style="width: 100%; color: black"
+        v-loading="courseListLoading"
+      >
+        <el-table-column
+          prop="courseName"
+          label="课程名称"
+          align="center"
+          show-overflow-tooltip
+          min-width="150"
+        ></el-table-column>
+        <el-table-column
+          prop="openCourseName"
+          label="开课名称"
+          align="center"
+          show-overflow-tooltip
+          min-width="150"
+        ></el-table-column>
+        <el-table-column
+          prop="title"
+          label="授课标题"
+          align="center"
+          show-overflow-tooltip
+          min-width="200"
+        ></el-table-column>
+        <el-table-column
+          prop="teachDate"
+          label="授课日期"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        ></el-table-column>
+        <el-table-column
+          prop="startTime"
+          label="开始时间"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        ></el-table-column>
+        <el-table-column
+          prop="endTime"
+          label="结束时间"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        ></el-table-column>
+        <el-table-column
+          prop="classSection"
+          label="节次"
+          align="center"
+          show-overflow-tooltip
+          min-width="100"
+        ></el-table-column>
+        <el-table-column
+          label="操作"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        >
+          <template slot-scope="scope">
+            <el-button
+              type="primary"
+              size="mini"
+              @click="showStudentInfo(scope.row)"
+            >
+              学生信息
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <div class="block" style="margin-top: 20px;">
+        <el-pagination
+          :total="courseListTotal"
+          :page-size="courseListPageSize"
+          :current-page="courseListCurrentPage"
+          @current-change="handleCourseListPageChange"
+          @size-change="handleCourseListSizeChange"
+          background
+          layout="sizes, prev, pager, next, total"
+        ></el-pagination>
+      </div>
+    </el-dialog>
+    
+    <!-- 学生信息弹窗 -->
+    <el-dialog
+      :visible.sync="studentInfoDialogVisible"
+      title="学生信息"
+      width="60%"
+    >
+      <el-table
+        :data="studentInfoData"
+        stripe
+        height="300"
+        style="width: 100%; color: black"
+        v-loading="studentInfoLoading"
+      >
+        <el-table-column
+          prop="name"
+          label="姓名"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        ></el-table-column>
+        <el-table-column
+          prop="stuNo"
+          label="学号"
+          align="center"
+          show-overflow-tooltip
+          min-width="120"
+        ></el-table-column>
+        <el-table-column
+          prop="schoolName"
+          label="学校名称"
+          align="center"
+          show-overflow-tooltip
+          min-width="200"
+        ></el-table-column>
+      </el-table>
+      
+      <div class="block" style="margin-top: 20px;">
+        <el-pagination
+          :total="studentInfoTotal"
+          :page-size="studentInfoPageSize"
+          :current-page="studentInfoCurrentPage"
+          @current-change="handleStudentInfoPageChange"
+          @size-change="handleStudentInfoSizeChange"
+          background
+          layout="sizes, prev, pager, next, total"
+        ></el-pagination>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -781,7 +949,25 @@ export default {
       courseOptions: [],
       openCourseOptions: [],
       classOptions: [],
-      selectAllClasses: false
+      selectAllClasses: false,
+      // 课程列表相关
+      courseListDialogVisible: false,
+      courseListForm: {
+        title: ''
+      },
+      courseListData: [],
+      courseListLoading: false,
+      courseListTotal: 0,
+      courseListCurrentPage: 1,
+      courseListPageSize: 10,
+      // 学生信息相关
+      studentInfoDialogVisible: false,
+      studentInfoData: [],
+      studentInfoLoading: false,
+      studentInfoTotal: 0,
+      studentInfoCurrentPage: 1,
+      studentInfoPageSize: 10,
+      currentFaceTeachId: ''
     };
   },
   computed: {},
@@ -1460,6 +1646,135 @@ export default {
         return '';
       }
       return this.addClassForm.classSection;
+    },
+    
+    // 课程列表相关方法
+    showCourseListDialog() {
+      this.courseListDialogVisible = true;
+      this.courseListCurrentPage = 1;
+      this.courseListForm.title = '';
+      this.searchCourses();
+    },
+    
+    resetCourseListForm() {
+      this.courseListForm = {
+        title: ''
+      };
+      this.courseListData = [];
+      this.courseListTotal = 0;
+      this.courseListCurrentPage = 1;
+    },
+    
+    async searchCourses() {
+      this.courseListLoading = true;
+      try {
+        const params = new URLSearchParams({
+          page: this.courseListCurrentPage,
+          pageSize: this.courseListPageSize
+        });
+        
+        if (this.courseListForm.title) {
+          params.append('title', this.courseListForm.title);
+        }
+        
+        const response = await fetch(`/qt/course/dock/getFaceTeachList?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.courseListData = this.formatCourseListData(data.result.list);
+          this.courseListTotal = data.result.totalCount;
+        } else {
+          this.$message.error(data.msg || '获取课程列表失败');
+        }
+      } catch (error) {
+        console.error('获取课程列表失败:', error);
+        this.$message.error('获取课程列表失败');
+      } finally {
+        this.courseListLoading = false;
+      }
+    },
+    
+    formatCourseListData(list) {
+      return list.map(item => ({
+        ...item,
+        teachDate: this.formatDate(item.teachDate),
+        startTime: this.formatDateTime(item.startDate),
+        endTime: this.formatDateTime(item.endDate)
+      }));
+    },
+    
+    formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('zh-CN');
+    },
+    
+    formatDateTime(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    },
+    
+    handleCourseListPageChange(page) {
+      this.courseListCurrentPage = page;
+      this.searchCourses();
+    },
+    
+    handleCourseListSizeChange(size) {
+      this.courseListPageSize = size;
+      this.courseListCurrentPage = 1;
+      this.searchCourses();
+    },
+    
+    // 学生信息相关方法
+    showStudentInfo(row) {
+      this.currentFaceTeachId = row.id;
+      this.studentInfoDialogVisible = true;
+      this.studentInfoCurrentPage = 1;
+      this.loadStudentInfo();
+    },
+    
+    async loadStudentInfo() {
+      this.studentInfoLoading = true;
+      try {
+        const params = new URLSearchParams({
+          faceTeachId: this.currentFaceTeachId,
+          page: this.studentInfoCurrentPage,
+          pageSize: this.studentInfoPageSize
+        });
+        
+        const response = await fetch(`/qt/course/dock/getFaceStuList?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.studentInfoData = data.result.list;
+          this.studentInfoTotal = data.result.totalCount;
+        } else {
+          this.$message.error(data.msg || '获取学生信息失败');
+        }
+      } catch (error) {
+        console.error('获取学生信息失败:', error);
+        this.$message.error('获取学生信息失败');
+      } finally {
+        this.studentInfoLoading = false;
+      }
+    },
+    
+    handleStudentInfoPageChange(page) {
+      this.studentInfoCurrentPage = page;
+      this.loadStudentInfo();
+    },
+    
+    handleStudentInfoSizeChange(size) {
+      this.studentInfoPageSize = size;
+      this.studentInfoCurrentPage = 1;
+      this.loadStudentInfo();
     }
   },
 };
@@ -1816,6 +2131,48 @@ export default {
     .time-picker-item {
       max-width: 120px;
     }
+  }
+}
+
+/* 课程列表弹窗样式 */
+.course-filter-section {
+  background: #f7f8fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.course-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.course-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.course-filter-label {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+/* 学生信息弹窗样式 */
+.el-dialog[aria-label="学生信息"] {
+  .el-dialog__body {
+    padding: 20px;
+  }
+}
+
+/* 课程列表弹窗样式 */
+.el-dialog[aria-label="课程列表"] {
+  .el-dialog__body {
+    padding: 20px;
   }
 }
 </style>
