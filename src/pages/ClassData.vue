@@ -50,6 +50,8 @@
             show-search
             allow-clear
             :loading="courseSearchLoading"
+            :filter-option="false"
+            :key="courseListKey"
           >
             <a-select-option
               v-for="courseName in courseList"
@@ -233,6 +235,9 @@ export default {
       courseList: [],
       courseMapping: {}, // 存储课程名到courseId的映射
       courseSearchLoading: false, // 课程搜索加载状态
+      originalCourseList: [], // 存储完整的课程列表
+      originalCourseMapping: {}, // 存储完整的课程映射
+      courseListKey: 0, // 用于强制重新渲染 Select 组件
       // 对比表格数据
       speakingTopTenData: [], // 发言次数前十对比数据
       participationTopTenData: [], // 参与度前十对比数据
@@ -749,6 +754,17 @@ export default {
     onCourseChange(value) {
       this.course = value
       console.log('选择的课程:', value)
+      
+      // 如果清空选择，恢复完整列表
+      if (!value && this.canSelectCourse && this.originalCourseList.length > 0) {
+        console.log('Course changed to null, restoring from cache')
+        this.courseList = [...this.originalCourseList]
+        this.courseMapping = { ...this.originalCourseMapping }
+        // 强制重新渲染 Select 组件
+        this.courseListKey++
+        console.log('Updated courseListKey:', this.courseListKey)
+      }
+      
       // 重置抬头率和班级列表
       this.headupRate = 0
       this.classList = []
@@ -803,9 +819,14 @@ export default {
           Object.entries(response).forEach(([courseId, courseName]) => {
             this.courseMapping[courseName] = courseId
           })
+          // 保存完整的课程列表和映射
+          this.originalCourseList = [...this.courseList]
+          this.originalCourseMapping = { ...this.courseMapping }
         } else {
           this.courseList = []
           this.courseMapping = {}
+          this.originalCourseList = []
+          this.originalCourseMapping = {}
         }
         
         // 获取对比表格数据（只在时间改变时调用）
@@ -1338,8 +1359,14 @@ export default {
     // 课程搜索方法
     async onCourseSearch(value) {
       if (!value || value.trim() === '' || !this.canSelectCourse) {
-        // 如果搜索值为空或不能选择课程，获取完整列表
-        await this.fetchCourseList()
+        // 如果搜索值为空或不能选择课程，恢复完整列表
+        if (this.originalCourseList.length > 0) {
+          this.courseList = [...this.originalCourseList]
+          this.courseMapping = { ...this.originalCourseMapping }
+        } else {
+          // 如果没有缓存，重新获取完整列表
+          await this.fetchCourseList()
+        }
         return
       }
       
@@ -1385,8 +1412,12 @@ export default {
     // 课程清空搜索方法
     async onCourseClear() {
       this.course = null
-      // 清空后立即重新获取完整列表
-      if (this.canSelectCourse) {
+      // 清空后恢复完整的课程列表
+      if (this.canSelectCourse && this.originalCourseList.length > 0) {
+        this.courseList = [...this.originalCourseList]
+        this.courseMapping = { ...this.originalCourseMapping }
+      } else if (this.canSelectCourse) {
+        // 如果没有缓存，重新获取完整列表
         await this.fetchCourseList()
       }
     },

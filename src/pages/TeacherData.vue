@@ -3,10 +3,10 @@
     <div class="header">
       <a-button 
         type="primary" 
-        :icon="h(ArrowLeftOutlined)" 
         @click="goHome"
         class="back-button"
       >
+        <ArrowLeftOutlined />
         返回首页
       </a-button>
       <h1 class="title">教员数据</h1>
@@ -50,6 +50,8 @@
             show-search
             allow-clear
             :loading="teacherSearchLoading"
+            :filter-option="false"
+            :key="teacherListKey"
           >
             <a-select-option
               v-for="teacherName in teacherList"
@@ -220,6 +222,9 @@ export default {
       teacherList: [],
       teacherMapping: {}, // 存储教员名到teacherId的映射
       teacherSearchLoading: false, // 教员搜索加载状态
+      originalTeacherList: [], // 存储完整的教员列表
+      originalTeacherMapping: {}, // 存储完整的教员映射
+      teacherListKey: 0, // 用于强制重新渲染 Select 组件
       // 教员详情数据
       teacherDetail: {},
       // 教员抬头率数据
@@ -782,6 +787,15 @@ export default {
       // 清空提示信息
       this.excitementTooltip = ''
       this.excitementTooltipHtml = ''
+      
+      // 如果清空选择，恢复完整列表
+      if (!value && this.canSelectTeacher && this.originalTeacherList.length > 0) {
+        this.teacherList = [...this.originalTeacherList]
+        this.teacherMapping = { ...this.originalTeacherMapping }
+        // 强制重新渲染 Select 组件
+        this.teacherListKey++
+      }
+      
       // 选择教员后可以在这里添加获取教员数据的逻辑
       if (value) {
         this.fetchTeacherData()
@@ -821,9 +835,14 @@ export default {
           Object.entries(response).forEach(([teacherId, teacherName]) => {
             this.teacherMapping[teacherName] = teacherId
           })
+          // 保存完整的教员列表和映射
+          this.originalTeacherList = [...this.teacherList]
+          this.originalTeacherMapping = { ...this.teacherMapping }
         } else {
           this.teacherList = []
           this.teacherMapping = {}
+          this.originalTeacherList = []
+          this.originalTeacherMapping = {}
         }
       } catch (error) {
         console.error('获取教员列表出错:', error)
@@ -833,8 +852,14 @@ export default {
     // 教员搜索方法
     async onTeacherSearch(value) {
       if (!value || value.trim() === '' || !this.canSelectTeacher) {
-        // 如果搜索值为空或不能选择教员，获取完整列表
-        await this.fetchTeacherList()
+        // 如果搜索值为空或不能选择教员，恢复完整列表
+        if (this.originalTeacherList.length > 0) {
+          this.teacherList = [...this.originalTeacherList]
+          this.teacherMapping = { ...this.originalTeacherMapping }
+        } else {
+          // 如果没有缓存，重新获取完整列表
+          await this.fetchTeacherList()
+        }
         return
       }
       
@@ -880,8 +905,14 @@ export default {
     // 教员清空搜索方法
     async onTeacherClear() {
       this.teacher = null
-      // 清空后立即重新获取完整列表
-      if (this.canSelectTeacher) {
+      // 清空后恢复完整的教员列表
+      if (this.canSelectTeacher && this.originalTeacherList.length > 0) {
+        this.teacherList = [...this.originalTeacherList]
+        this.teacherMapping = { ...this.originalTeacherMapping }
+        // 强制重新渲染 Select 组件
+        this.teacherListKey++
+      } else if (this.canSelectTeacher) {
+        // 如果没有缓存，重新获取完整列表
         await this.fetchTeacherList()
       }
     },

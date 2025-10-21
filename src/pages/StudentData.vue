@@ -50,6 +50,8 @@
             show-search
             allow-clear
             :loading="studentClassSearchLoading"
+            :filter-option="false"
+            :key="studentClassListKey"
           >
             <a-select-option
               v-for="className in studentClassList"
@@ -181,6 +183,9 @@ export default {
       studentClassList: [],
       studentClassMapping: {}, // 存储班级名到studentClassId的映射
       studentClassSearchLoading: false, // 学员班级搜索加载状态
+      originalStudentClassList: [], // 存储完整的学员班级列表
+      originalStudentClassMapping: {}, // 存储完整的学员班级映射
+      studentClassListKey: 0, // 用于强制重新渲染 Select 组件
       // 学员班级详情数据
       studentClassDetail: {},
       // 学员班级抬头率数据
@@ -349,6 +354,17 @@ export default {
     onStudentClassChange(value) {
       this.studentClass = value
       console.log('选择的学员班级:', value)
+      
+      // 如果清空选择，恢复完整列表
+      if (!value && this.canSelectStudentClass && this.originalStudentClassList.length > 0) {
+        console.log('StudentClass changed to null, restoring from cache')
+        this.studentClassList = [...this.originalStudentClassList]
+        this.studentClassMapping = { ...this.originalStudentClassMapping }
+        // 强制重新渲染 Select 组件
+        this.studentClassListKey++
+        console.log('Updated studentClassListKey:', this.studentClassListKey)
+      }
+      
       // 选择学员班级后可以在这里添加获取学员数据的逻辑
       if (value) {
         this.fetchStudentData()
@@ -388,6 +404,9 @@ export default {
           Object.entries(response).forEach(([studentClassId, studentClassName]) => {
             this.studentClassMapping[studentClassName] = studentClassId
           })
+          // 保存完整的学员班级列表和映射
+          this.originalStudentClassList = [...this.studentClassList]
+          this.originalStudentClassMapping = { ...this.studentClassMapping }
           
           // 如果当前没有选择班级且有可用班级，自动选择第一个
           if (!this.studentClass && this.studentClassList.length > 0) {
@@ -398,6 +417,8 @@ export default {
         } else {
           this.studentClassList = []
           this.studentClassMapping = {}
+          this.originalStudentClassList = []
+          this.originalStudentClassMapping = {}
         }
       } catch (error) {
         console.error('获取学员班级列表出错:', error)
@@ -641,8 +662,14 @@ export default {
     // 学员班级搜索方法
     async onStudentClassSearch(value) {
       if (!value || value.trim() === '' || !this.canSelectStudentClass) {
-        // 如果搜索值为空或不能选择学员班级，获取完整列表
-        await this.fetchStudentClassList()
+        // 如果搜索值为空或不能选择学员班级，恢复完整列表
+        if (this.originalStudentClassList.length > 0) {
+          this.studentClassList = [...this.originalStudentClassList]
+          this.studentClassMapping = { ...this.originalStudentClassMapping }
+        } else {
+          // 如果没有缓存，重新获取完整列表
+          await this.fetchStudentClassList()
+        }
         return
       }
       
@@ -688,8 +715,12 @@ export default {
     // 学员班级清空搜索方法
     async onStudentClassClear() {
       this.studentClass = null
-      // 清空后立即重新获取完整列表
-      if (this.canSelectStudentClass) {
+      // 清空后恢复完整的学员班级列表
+      if (this.canSelectStudentClass && this.originalStudentClassList.length > 0) {
+        this.studentClassList = [...this.originalStudentClassList]
+        this.studentClassMapping = { ...this.originalStudentClassMapping }
+      } else if (this.canSelectStudentClass) {
+        // 如果没有缓存，重新获取完整列表
         await this.fetchStudentClassList()
       }
     },
