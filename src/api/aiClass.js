@@ -172,3 +172,12 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取学生列表数据（用于详情弹窗）
+  export function getFaceStuList(params) {
+    return request({
+      url: '/qt/course/dock/getFaceStuList',
+      method: 'get',
+      params
+    })
+  }

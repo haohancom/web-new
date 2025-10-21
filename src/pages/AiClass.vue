@@ -247,10 +247,52 @@
     </a-card>
     <el-dialog
       :visible.sync="dialogVisible"
-      width="60%"
+      width="80%"
       height="100px"
       top="50px"
     >
+      <!-- 学生列表表格 -->
+      <div style="margin-bottom: 20px;">
+        <h3 style="margin-bottom: 15px; color: #333; font-size: 16px; font-weight: bold;">学生列表</h3>
+        <el-table
+          :data="faceStuListData"
+          stripe
+          height="200"
+          style="width: 100%; color: black"
+          v-loading="faceStuListLoading"
+        >
+          <el-table-column
+            prop="name"
+            label="姓名"
+            align="center"
+            show-overflow-tooltip
+            min-width="120"
+          ></el-table-column>
+          <el-table-column
+            prop="stuNo"
+            label="学号"
+            align="center"
+            show-overflow-tooltip
+            min-width="120"
+          ></el-table-column>
+          <el-table-column
+            prop="schoolName"
+            label="学校名称"
+            align="center"
+            show-overflow-tooltip
+            min-width="200"
+          ></el-table-column>
+          <el-table-column
+            prop="className"
+            label="班级"
+            align="center"
+            show-overflow-tooltip
+            min-width="150"
+          ></el-table-column>
+        </el-table>
+      </div>
+      
+      <!-- 图表区域 -->
       <div
         style="
           display: flex;
@@ -967,7 +1009,10 @@ export default {
       studentInfoTotal: 0,
       studentInfoCurrentPage: 1,
       studentInfoPageSize: 10,
-      currentFaceTeachId: ''
+      currentFaceTeachId: '',
+      // 详情弹窗学生列表相关
+      faceStuListData: [],
+      faceStuListLoading: false
     };
   },
   computed: {},
@@ -1187,6 +1232,10 @@ export default {
     },
     showDetail(row) {
       this.dialogVisible = true;
+      
+      // 获取学生列表数据
+      this.loadFaceStuList(row);
+      
       this.$nextTick(() => {
         // 学生动作数据
         getStudentAction({ curriculumId: row.curriculumId }).then((res) => {
@@ -1775,6 +1824,41 @@ export default {
       this.studentInfoPageSize = size;
       this.studentInfoCurrentPage = 1;
       this.loadStudentInfo();
+    },
+    
+    // 加载学生列表数据（用于详情弹窗）
+    async loadFaceStuList(row) {
+      console.log('loadFaceStuList 被调用，参数:', row);
+      this.faceStuListLoading = true;
+      try {
+        const params = new URLSearchParams({
+          classDate: row.classDate,
+          classTime: row.classTime,
+          courseId: row.courseId,
+          course: row.course,
+          teacherId: row.teacherId,
+          teacherName: row.teacherName
+        });
+        
+        console.log('准备调用 getFaceStuList，参数:', params.toString());
+        const response = await fetch(`/qt/course/dock/getFaceStuList?${params.toString()}`);
+        const data = await response.json();
+        console.log('getFaceStuList 响应:', data);
+        
+        if (data.code === 200) {
+          this.faceStuListData = data.result || [];
+          console.log('学生列表数据:', this.faceStuListData);
+        } else {
+          this.$message.warning("暂无学生列表数据");
+          this.faceStuListData = [];
+        }
+      } catch (error) {
+        console.error('获取学生列表失败:', error);
+        this.$message.error('获取学生列表失败');
+        this.faceStuListData = [];
+      } finally {
+        this.faceStuListLoading = false;
+      }
     }
   },
 };
