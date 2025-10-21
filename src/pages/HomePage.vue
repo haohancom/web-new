@@ -78,27 +78,30 @@ export default {
 
 <style scoped>
 .home-page {
-  padding: 20px;
+  padding: 0;
   background: #f0f2f5;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .page-title {
   text-align: center;
-  margin-bottom: 40px;
   color: #1890ff;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: bold;
   width: 100%;
-  display: block;
+  padding: 60px 20px 40px 20px;
+  flex-shrink: 0;
+  margin-top: 20px;
 }
 
 .home-container {
-  padding: 60px 20px;
-  min-height: 100vh;
+  padding: 0;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,22 +119,24 @@ export default {
   display: flex;
   gap: 16px;
   justify-content: center;
-  flex-wrap: wrap;
-  max-width: 1000px;
+  flex-wrap: nowrap;
+  max-width: 1200px;
+  padding: 20px;
 }
 
 .nav-button {
   height: 120px;
-  width: 180px;
+  width: 160px;
   font-size: 18px;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button .anticon {
@@ -140,7 +145,7 @@ export default {
 }
 
 .nav-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(24, 144, 255, 0.25);
 }
 </style>
