@@ -3,27 +3,26 @@
     <h1 class="page-title">思政课堂学员自主学习系统</h1>
     <div class="home-container">
       <div class="nav-container">
-        <a-row :gutter="16" justify="center">
-          <a-col :span="4" v-for="button in navButtons" :key="button.key">
-            <a-button
-              type="primary"
-              size="large"
-              block
-              class="nav-button"
-              @click="handleNavigate(button.route)"
-            >
-              <a-icon :component="button.icon" />
-              {{ button.text }}
-            </a-button>
-          </a-col>
-        </a-row>
+        <div class="button-grid">
+          <a-button
+            v-for="button in navButtons"
+            :key="button.key"
+            type="primary"
+            size="large"
+            class="nav-button"
+            @click="handleNavigate(button.route)"
+          >
+            <a-icon :component="button.icon" />
+            {{ button.text }}
+          </a-button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { CalendarOutlined, TeamOutlined, UserOutlined, ContactsOutlined, RobotOutlined } from '@ant-design/icons-vue'
+import { CalendarOutlined, TeamOutlined, UserOutlined, ContactsOutlined } from '@ant-design/icons-vue'
 
 export default {
   name: 'HomePage',
@@ -31,8 +30,7 @@ export default {
     CalendarOutlined,
     TeamOutlined,
     UserOutlined,
-    ContactsOutlined,
-    RobotOutlined
+    ContactsOutlined
   },
   data() {
     return {
@@ -67,12 +65,6 @@ export default {
           text: '学员数据',
           route: '/studentData'
         },
-        {
-          key: 'aiSystem',
-          icon: RobotOutlined,
-          text: '智能中心',
-          route: '/aiSystem'
-        }
       ]
     }
   },
@@ -89,6 +81,9 @@ export default {
   padding: 20px;
   background: #f0f2f5;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .page-title {
@@ -97,6 +92,8 @@ export default {
   color: #1890ff;
   font-size: 28px;
   font-weight: bold;
+  width: 100%;
+  display: block;
 }
 
 .home-container {
@@ -111,10 +108,21 @@ export default {
 .nav-container {
   width: 100%;
   max-width: 1200px;
+  display: flex;
+  justify-content: center;
+}
+
+.button-grid {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 1000px;
 }
 
 .nav-button {
   height: 120px;
+  width: 180px;
   font-size: 18px;
   font-weight: 500;
   border-radius: 8px;
@@ -123,6 +131,7 @@ export default {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .nav-button .anticon {
