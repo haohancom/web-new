@@ -18,7 +18,6 @@
 - **班级数据** (`/classData`): 班级信息统计表格
 - **教员数据** (`/teacherData`): 教师信息统计表格
 - **学员数据** (`/studentData`): 学生信息统计表格
-- **智能中心** (`/aiSystem/*`): AI系统相关功能
 
 ### AI系统子页面
 - **首页**: 系统概览和性能监控
@@ -66,15 +65,13 @@ npm run build
 ```
 src/
 ├── components/          # 通用组件
-│   ├── NotFound.vue    # 404页面
-│   └── AiSystem/       # AI系统组件
+│   └── NotFound/       # 404页面
 ├── pages/              # 页面组件
 │   ├── HomePage.vue    # 首页
 │   ├── DayData.vue     # 今日数据
 │   ├── ClassData.vue   # 班级数据
 │   ├── TeacherData.vue # 教员数据
-│   ├── StudentData.vue # 学员数据
-│   └── AiSystem.vue    # 智能中心
+│   └── StudentData.vue # 学员数据
 ├── services/           # 服务层
 │   └── mockData.js     # Mock数据服务
 ├── styles/             # 样式文件
