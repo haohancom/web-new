@@ -94,6 +94,13 @@
         >
           对比
         </a-button>
+        <a-button
+          type="primary"
+          @click="showAddClassDialog"
+          class="back-button"
+        >
+          新增课堂
+        </a-button>
       </div>
     </div>
 
@@ -284,6 +291,181 @@
       top="50px"
     >
       <vxe-grid class="reverse-table" v-bind="gridOptions"></vxe-grid>
+    </el-dialog>
+    
+    <!-- 新增课堂模态框 -->
+    <el-dialog
+      :visible.sync="addClassDialogVisible"
+      title="新增教学设计"
+      width="600px"
+      @close="resetAddClassForm"
+    >
+      <el-form :model="addClassForm" :rules="addClassRules" ref="addClassForm" label-width="100px">
+        <!-- 教学模式 -->
+        <el-form-item label="教学模式:" prop="faceTeachType">
+          <el-select v-model="addClassForm.faceTeachType" placeholder="请选择教学模式" style="width: 100%">
+            <el-option label="交互(研讨)教学" :value="1"></el-option>
+            <el-option label="混合教学" :value="2"></el-option>
+            <el-option label="案例/战例教学" :value="3"></el-option>
+            <el-option label="想定作业教学" :value="4"></el-option>
+            <el-option label="专题研究" :value="5"></el-option>
+            <el-option label="综合演练" :value="6"></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <!-- 教师选择 -->
+        <el-form-item label="教师:" prop="teacherId">
+          <el-select
+            v-model="addClassForm.teacherId"
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请搜索并选择教师"
+            :remote-method="searchTeachers"
+            :loading="teacherSearchLoading"
+            @change="onTeacherChange"
+            style="width: 100%"
+            :popper-append-to-body="false"
+          >
+            <el-option
+              v-for="teacher in teacherOptions"
+              :key="teacher.teaId"
+              :label="teacher.teaName"
+              :value="teacher.teaId"
+            ></el-option>
+          </el-select>
+          <!-- 教师分页控件 -->
+          <div v-if="teacherPagination.totalPages > 1" style="margin-top: 10px; text-align: center;">
+            <el-pagination
+              :current-page="teacherPagination.curPage"
+              :page-size="teacherPagination.pageSize"
+              :total="teacherPagination.totalCount"
+              layout="prev, pager, next"
+              @current-change="handleTeacherPageChange"
+              small
+            ></el-pagination>
+          </div>
+        </el-form-item>
+        
+        <!-- 课程选择 -->
+        <el-form-item label="*课程:" prop="courseId">
+          <el-select v-model="addClassForm.courseId" placeholder="请选择课程" :disabled="!addClassForm.teacherId" @change="onCourseChange" style="width: 100%">
+            <el-option
+              v-for="course in courseOptions"
+              :key="course.id"
+              :label="course.name"
+              :value="course.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <!-- 开课选择 -->
+        <el-form-item label="*开课:" prop="openCourseId">
+          <el-select v-model="addClassForm.openCourseId" placeholder="请选择开课" :disabled="!addClassForm.courseId" @change="onOpenCourseChange" style="width: 100%">
+            <el-option
+              v-for="openCourse in openCourseOptions"
+              :key="openCourse.openCourseId"
+              :label="openCourse.openCourseName"
+              :value="openCourse.openCourseId"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <!-- 班级选择 -->
+        <el-form-item label="*班级:" prop="classIds">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-select
+              v-model="addClassForm.classIds"
+              multiple
+              placeholder="请选择班级"
+              :disabled="!addClassForm.openCourseId"
+              style="flex: 1"
+            >
+              <el-option
+                v-for="classItem in classOptions"
+                :key="classItem.id"
+                :label="classItem.name"
+                :value="classItem.id"
+              ></el-option>
+            </el-select>
+            <el-checkbox
+              v-model="selectAllClasses"
+              @change="handleSelectAllClasses"
+              :disabled="!addClassForm.openCourseId"
+            >
+              全选
+            </el-checkbox>
+          </div>
+        </el-form-item>
+        
+        <!-- 日期选择 -->
+        <el-form-item label="*日期:" prop="date">
+          <el-date-picker
+            v-model="addClassForm.date"
+            type="date"
+            placeholder="选择日期"
+            value-format="yyyy-MM-dd"
+            style="width: 100%"
+          ></el-date-picker>
+        </el-form-item>
+        
+        <!-- 时间选择 -->
+        <el-form-item label="时间:" prop="timeRange" class="time-range-form-item">
+          <div class="time-picker-container">
+            <el-time-picker
+              v-model="addClassForm.startTime"
+              placeholder="开始时间"
+              value-format="HH:mm:ss"
+              class="time-picker-item"
+              :popper-append-to-body="false"
+            ></el-time-picker>
+            <span class="time-separator">-</span>
+            <el-time-picker
+              v-model="addClassForm.endTime"
+              placeholder="结束时间"
+              value-format="HH:mm:ss"
+              class="time-picker-item"
+              :popper-append-to-body="false"
+            ></el-time-picker>
+          </div>
+        </el-form-item>
+        
+        <!-- 节次选择 -->
+        <el-form-item label="*节次:" prop="classSection">
+          <el-select v-model="addClassForm.classSection" placeholder="请选择节次" @change="onClassSectionChange" style="width: 100%">
+            <el-option label="1,2" value="1,2"></el-option>
+            <el-option label="3,4" value="3,4"></el-option>
+            <el-option label="5,6" value="5,6"></el-option>
+            <el-option label="7,8" value="7,8"></el-option>
+            <el-option label="9,10" value="9,10"></el-option>
+            <el-option label="自定义" value="custom"></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <!-- 自定义节次输入 -->
+        <el-form-item v-if="addClassForm.classSection === 'custom'" label="自定义节次:" prop="customSection">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <el-input-number
+              v-model="addClassForm.customStartSection"
+              :min="1"
+              :max="20"
+              placeholder="开始节次"
+            ></el-input-number>
+            <span>-</span>
+            <el-input-number
+              v-model="addClassForm.customEndSection"
+              :min="1"
+              :max="20"
+              placeholder="结束节次"
+            ></el-input-number>
+          </div>
+        </el-form-item>
+      </el-form>
+      
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addClassDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAddClass">确定</el-button>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -548,6 +730,45 @@ export default {
           },
         ],
       },
+      // 新增课堂相关数据
+      addClassDialogVisible: false,
+      addClassForm: {
+        faceTeachType: null,
+        teacherId: '',
+        courseId: '',
+        openCourseId: '',
+        classIds: [],
+        date: '',
+        startTime: '',
+        endTime: '',
+        classSection: '',
+        customStartSection: null,
+        customEndSection: null
+      },
+      addClassRules: {
+        faceTeachType: [{ required: true, message: '请选择教学模式', trigger: 'change' }],
+        teacherId: [{ required: true, message: '请选择教师', trigger: 'change' }],
+        courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
+        openCourseId: [{ required: true, message: '请选择开课', trigger: 'change' }],
+        classIds: [{ required: true, message: '请选择班级', trigger: 'change' }],
+        date: [{ required: true, message: '请选择日期', trigger: 'change' }],
+        classSection: [{ required: true, message: '请选择节次', trigger: 'change' }]
+      },
+      // 教师搜索相关
+      teacherOptions: [],
+      teacherSearchLoading: false,
+      teacherPagination: {
+        curPage: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 0
+      },
+      lastSearchQuery: '',
+      // 课程相关
+      courseOptions: [],
+      openCourseOptions: [],
+      classOptions: [],
+      selectAllClasses: false
     };
   },
   computed: {},
@@ -973,6 +1194,248 @@ export default {
       this.pageSize = val;
       this.getTable();
     },
+    
+    // 新增课堂相关方法
+    showAddClassDialog() {
+      this.addClassDialogVisible = true;
+      // 初始化教师搜索
+      this.searchTeachers('');
+    },
+    
+    resetAddClassForm() {
+      this.addClassForm = {
+        faceTeachType: null,
+        teacherId: '',
+        courseId: '',
+        openCourseId: '',
+        classIds: [],
+        date: '',
+        startTime: '',
+        endTime: '',
+        classSection: '',
+        customStartSection: null,
+        customEndSection: null
+      };
+      this.courseOptions = [];
+      this.openCourseOptions = [];
+      this.classOptions = [];
+      this.selectAllClasses = false;
+      if (this.$refs.addClassForm) {
+        this.$refs.addClassForm.resetFields();
+      }
+    },
+    
+    // 教师搜索相关方法
+    async searchTeachers(query) {
+      this.teacherSearchLoading = true;
+      try {
+        // 如果是新的搜索查询，重置到第一页
+        if (query !== this.lastSearchQuery) {
+          this.teacherPagination.curPage = 1;
+          this.lastSearchQuery = query;
+        }
+        
+        const response = await fetch(`/qt/course/dock/getSchoolTeaList?name=${encodeURIComponent(query)}&page=${this.teacherPagination.curPage}&pageSize=${this.teacherPagination.pageSize}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.teacherOptions = data.result.list;
+          this.teacherPagination = {
+            curPage: data.result.curPage,
+            pageSize: data.result.pageSize,
+            totalCount: data.result.totalCount,
+            totalPages: data.result.totalPages
+          };
+        }
+      } catch (error) {
+        console.error('搜索教师失败:', error);
+        this.$message.error('搜索教师失败');
+      } finally {
+        this.teacherSearchLoading = false;
+      }
+    },
+    
+    handleTeacherPageChange(page) {
+      this.teacherPagination.curPage = page;
+      this.searchTeachers(this.lastSearchQuery);
+    },
+    
+    onTeacherChange(teacherId) {
+      if (teacherId) {
+        this.loadCourses(teacherId);
+        // 清空后续选择
+        this.addClassForm.courseId = '';
+        this.addClassForm.openCourseId = '';
+        this.addClassForm.classIds = [];
+        this.courseOptions = [];
+        this.openCourseOptions = [];
+        this.classOptions = [];
+      }
+    },
+    
+    // 课程相关方法
+    async loadCourses(teacherId) {
+      try {
+        const response = await fetch(`/qt/course/dock/getAllCourseData?teaId=${teacherId}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.courseOptions = data.result;
+        }
+      } catch (error) {
+        console.error('获取课程失败:', error);
+        this.$message.error('获取课程失败');
+      }
+    },
+    
+    onCourseChange(courseId) {
+      if (courseId && this.addClassForm.teacherId) {
+        this.loadOpenCourses(courseId, this.addClassForm.teacherId);
+        // 清空后续选择
+        this.addClassForm.openCourseId = '';
+        this.addClassForm.classIds = [];
+        this.openCourseOptions = [];
+        this.classOptions = [];
+      }
+    },
+    
+    async loadOpenCourses(courseId, teacherId) {
+      try {
+        const response = await fetch(`/qt/course/dock/getOpenCourseCrumbsPage?courseId=${courseId}&teaId=${teacherId}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.openCourseOptions = data.result.list;
+        }
+      } catch (error) {
+        console.error('获取开课失败:', error);
+        this.$message.error('获取开课失败');
+      }
+    },
+    
+    onOpenCourseChange(openCourseId) {
+      if (openCourseId && this.addClassForm.courseId && this.addClassForm.teacherId) {
+        this.loadClasses(this.addClassForm.courseId, this.addClassForm.teacherId, openCourseId);
+        // 清空班级选择
+        this.addClassForm.classIds = [];
+        this.selectAllClasses = false;
+      }
+    },
+    
+    async loadClasses(courseId, teacherId, openCourseId) {
+      try {
+        const response = await fetch(`/qt/course/dock/getFaceClassById?courseId=${courseId}&teaId=${teacherId}&openCourseId=${openCourseId}`);
+        const data = await response.json();
+        
+        if (data.code === 200) {
+          this.classOptions = data.result;
+        }
+      } catch (error) {
+        console.error('获取班级失败:', error);
+        this.$message.error('获取班级失败');
+      }
+    },
+    
+    // 班级全选功能
+    handleSelectAllClasses(checked) {
+      if (checked) {
+        this.addClassForm.classIds = this.classOptions.map(item => item.id);
+      } else {
+        this.addClassForm.classIds = [];
+      }
+    },
+    
+    // 节次相关方法
+    onClassSectionChange(value) {
+      if (value !== 'custom') {
+        this.addClassForm.customStartSection = null;
+        this.addClassForm.customEndSection = null;
+      }
+    },
+    
+    // 提交新增课堂
+    async submitAddClass() {
+      try {
+        await this.$refs.addClassForm.validate();
+        
+        // 构建提交数据
+        const submitData = {
+          courseId: this.addClassForm.courseId,
+          openCourseId: this.addClassForm.openCourseId,
+          startDate: this.formatDateTime(this.addClassForm.date, this.addClassForm.startTime),
+          endDate: this.formatDateTime(this.addClassForm.date, this.addClassForm.endTime),
+          classSection: this.getFinalClassSection(),
+          classIds: this.addClassForm.classIds,
+          faceTeachType: this.addClassForm.faceTeachType,
+          teaId: this.addClassForm.teacherId
+        };
+        
+        // 验证必填字段
+        const requiredFields = {
+          courseId: '课程',
+          openCourseId: '开课',
+          classIds: '班级',
+          faceTeachType: '教学模式',
+          teaId: '教师'
+        };
+        
+        for (const [key, name] of Object.entries(requiredFields)) {
+          if (!submitData[key] || (Array.isArray(submitData[key]) && submitData[key].length === 0)) {
+            this.$message.error(`请选择${name}`);
+            return;
+          }
+        }
+        
+        if (!submitData.classSection) {
+          this.$message.error('请选择节次');
+          return;
+        }
+        
+        // 发送请求
+        const response = await fetch('/qt/course/dock/addFaceTeach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(submitData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.code === 200) {
+          this.$message.success('新增课堂成功');
+          this.addClassDialogVisible = false;
+          this.resetAddClassForm();
+          // 刷新表格数据
+          this.getTable();
+        } else {
+          this.$message.error(result.msg || '新增课堂失败');
+        }
+        
+      } catch (error) {
+        console.error('提交失败:', error);
+        this.$message.error('提交失败，请检查表单');
+      }
+    },
+    
+    formatDateTime(date, time) {
+      if (!date) return '';
+      if (!time) {
+        // 如果没有时间，使用默认时间
+        return `${date} 00:00:00`;
+      }
+      return `${date} ${time}`;
+    },
+    
+    getFinalClassSection() {
+      if (this.addClassForm.classSection === 'custom') {
+        if (this.addClassForm.customStartSection && this.addClassForm.customEndSection) {
+          return `${this.addClassForm.customStartSection},${this.addClassForm.customEndSection}`;
+        }
+        return '';
+      }
+      return this.addClassForm.classSection;
+    }
   },
 };
 </script>
@@ -1191,6 +1654,143 @@ export default {
     width: 100% !important;
     max-width: 320px;
     min-width: 280px;
+  }
+}
+
+/* 新增课堂模态框样式优化 */
+.el-dialog {
+  .el-form-item {
+    margin-bottom: 18px;
+  }
+  
+  /* 时间选择器容器样式 */
+  .time-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .time-picker-item {
+    flex: 1;
+    min-width: 0;
+    max-width: 160px;
+  }
+  
+  .time-separator {
+    flex-shrink: 0;
+    font-weight: 500;
+    color: #606266;
+    margin: 0 4px;
+  }
+  
+  /* 时间选择器样式优化 */
+  .el-form-item:has(.el-time-picker) {
+    .el-form-item__content {
+      position: relative;
+    }
+    
+    /* 确保时间选择器下拉面板不会超出对话框 */
+    .el-time-picker__popper {
+      position: fixed !important;
+      z-index: 2000 !important;
+    }
+  }
+  
+  /* 教师选择器分页样式 */
+  .el-form-item:has(.el-pagination) {
+    .el-form-item__content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+  
+  /* 班级选择器样式 */
+  .el-form-item:has(.el-select[multiple]) {
+    .el-form-item__content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .el-select {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .el-checkbox {
+      flex-shrink: 0;
+    }
+  }
+  
+  /* 自定义节次输入样式 */
+  .el-form-item:has(.el-input-number) {
+    .el-form-item__content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .el-input-number {
+      flex: 1;
+      max-width: 120px;
+    }
+  }
+}
+
+/* 全局时间选择器下拉面板样式 */
+.el-time-panel {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.el-time-picker__popper {
+  position: fixed !important;
+  z-index: 2000 !important;
+}
+
+/* 新增课堂模态框特定样式 */
+.el-dialog[aria-label="新增教学设计"] {
+  width: 600px !important;
+  max-width: 90vw;
+  
+  .el-dialog__body {
+    padding: 20px 20px 10px 20px;
+  }
+  
+  .el-form {
+    .el-form-item__label {
+      width: 100px !important;
+      text-align: right;
+      padding-right: 12px;
+    }
+    
+    .el-form-item__content {
+      margin-left: 100px !important;
+    }
+  }
+}
+
+/* 响应式设计 - 小屏幕优化 */
+@media (max-width: 768px) {
+  .el-dialog[aria-label="新增教学设计"] {
+    width: 95vw !important;
+    margin: 0 auto;
+    
+    .el-form {
+      .el-form-item__label {
+        width: 80px !important;
+      }
+      
+      .el-form-item__content {
+        margin-left: 80px !important;
+      }
+    }
+    
+    .time-picker-item {
+      max-width: 120px;
+    }
   }
 }
 </style>
