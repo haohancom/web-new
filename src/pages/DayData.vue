@@ -113,7 +113,7 @@
       </a-card>
 
       <a-card class="overview-card">
-        <div class="overview-title">课堂概况</div>、
+        <div class="overview-title">课堂概况</div>
       
         <div class="item-grid" style="grid-template-columns: repeat(2, 1fr)">
           <div
