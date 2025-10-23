@@ -324,6 +324,17 @@
             ></div>
           </div>
         </div>
+
+        <!-- 第三行：发言次数占比 -->
+        <div style="display: flex; justify-content: center; gap: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div style="margin-bottom: 10px; font-size: 16px; font-weight: bold;">发言次数占比</div>
+            <div
+              id="chart5"
+              style="width: 400px; height: 400px; background-color: #f0f0f0"
+            ></div>
+          </div>
+        </div>
       </div>
     </el-dialog>
     <el-dialog
@@ -697,6 +708,7 @@ import {
   getTeacherAction,
   getClassCount,
   getDetailList,
+  fetchSpeakRate,
 } from "@/api/aiClass";
 import * as echarts from "echarts";
 import { h } from "vue";
@@ -1419,6 +1431,72 @@ export default {
           
           var chart4 = echarts.init(document.getElementById("chart4"));
           chart4.setOption(emotionAnalysisOptions);
+        });
+
+        // 发言次数占比数据
+        fetchSpeakRate({ curriculumId: row.curriculumId }).then((res) => {
+          if (res === null || res === undefined) {
+            this.$message.warning("暂无发言次数占比数据");
+            return;
+          }
+          
+          // 将返回值转换为数值
+          const speakRate = parseFloat(res) || 0;
+          const otherRate = 100 - speakRate;
+          
+          // 构建饼状图数据
+          const data = [
+            { 
+              value: speakRate, 
+              name: "发言",
+              itemStyle: { color: '#1890ff' }
+            },
+            { 
+              value: otherRate, 
+              name: "其他",
+              itemStyle: { color: '#d9d9d9' }
+            }
+          ];
+          
+          const speakRateOptions = {
+            tooltip: {
+              trigger: "item",
+              formatter: "{a} <br/>{b}: {c}% ({d}%)"
+            },
+            legend: {
+              top: "5%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "发言次数占比",
+                type: "pie",
+                radius: ["40%", "70%"],
+                avoidLabelOverlap: false,
+                label: {
+                  show: false,
+                  position: "center",
+                },
+                emphasis: {
+                  label: {
+                    show: true,
+                    fontSize: 40,
+                    fontWeight: "bold",
+                  },
+                },
+                labelLine: {
+                  show: false,
+                },
+                data: data,
+              },
+            ],
+          };
+          
+          var chart5 = echarts.init(document.getElementById("chart5"));
+          chart5.setOption(speakRateOptions);
+        }).catch((error) => {
+          console.error('获取发言次数占比数据失败:', error);
+          this.$message.error('获取发言次数占比数据失败');
         });
       });
     },

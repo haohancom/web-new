@@ -181,3 +181,12 @@ import request from '@/utils/fetch'
       params
     })
   }
+
+  //获取发言次数占比数据
+  export function fetchSpeakRate(params) {
+    return request({
+      url: '/aiClass/fetchSpeakRate',
+      method: 'get',
+      params
+    })
+  }
