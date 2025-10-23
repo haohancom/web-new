@@ -113,6 +113,18 @@
       </a-card>
     </div>
 
+    <!-- 课程发言对比图表区域 -->
+    <div class="chart-grid">
+      <a-card class="chart-card">
+        <div class="chart-title">课程发言对比</div>
+        <v-chart
+          id="courseSpeechComparisonChart"
+          :option="courseSpeechComparisonOptions"
+          style="height: 280px"
+        ></v-chart>
+      </a-card>
+    </div>
+
     <!-- 课程进度图表区域 -->
     <div class="chart-grid">
       <a-card class="chart-card">
@@ -274,6 +286,42 @@ export default {
               show: false,
             },
             data: [],
+          },
+        ],
+      },
+      courseSpeechComparisonOptions: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          data: [],
+          axisLabel: {
+            rotate: 45,
+            interval: 0,
+          },
+        },
+        yAxis: {
+          type: "value",
+          name: "发言次数",
+        },
+        series: [
+          {
+            name: "发言次数",
+            type: "bar",
+            data: [],
+            itemStyle: {
+              color: "#1890ff",
+            },
           },
         ],
       },
@@ -496,6 +544,9 @@ export default {
         // 获取学员情绪分布数据
         await this.fetchStudentClassEmotionData()
         
+        // 获取课程发言对比数据
+        await this.fetchCourseSpeechComparisonData()
+        
         // 更新课程进度图数据
         this.updateCourseProgressCharts()
         
@@ -664,6 +715,61 @@ export default {
       } catch (error) {
         console.error('获取学员班级学员情绪分布数据出错:', error)
         this.$set(this.studentEmotionOptions.series[0], 'data', [])
+      }
+    },
+    // 获取课程发言对比数据
+    async fetchCourseSpeechComparisonData() {
+      if (!this.startDate || !this.endDate || !this.studentClass) {
+        return
+      }
+      
+      try {
+        const startDateStr = moment(this.startDate).format('YYYY-MM-DD')
+        const endDateStr = moment(this.endDate).format('YYYY-MM-DD')
+        const studentClassId = this.studentClassMapping[this.studentClass]
+        
+        if (!studentClassId) {
+          console.error('未找到对应的studentClassId:', this.studentClass)
+          return
+        }
+        
+        const response = await service({
+          method: 'get',
+          url: '/studentClass/fiftyFive',
+          params: {
+            startDate: startDateStr,
+            endDate: endDateStr,
+            studentClassId: studentClassId
+          }
+        })
+        
+        console.log('课程发言对比接口响应:', response)
+        
+        // 处理响应数据，将map格式转换为图表数据
+        if (response && typeof response === 'object') {
+          const courseNames = Object.keys(response)
+          const speechCounts = Object.values(response)
+          
+          // 更新图表数据，使用Vue.set确保响应式更新
+          this.$set(this.courseSpeechComparisonOptions.xAxis, 'data', courseNames)
+          this.$set(this.courseSpeechComparisonOptions.series[0], 'data', speechCounts)
+          
+          console.log('更新课程发言对比图表数据:', { courseNames, speechCounts })
+        } else {
+          // 如果没有数据，清空图表
+          this.$set(this.courseSpeechComparisonOptions.xAxis, 'data', [])
+          this.$set(this.courseSpeechComparisonOptions.series[0], 'data', [])
+        }
+        
+        // 强制重新渲染图表
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
+        
+      } catch (error) {
+        console.error('获取课程发言对比数据出错:', error)
+        this.$set(this.courseSpeechComparisonOptions.xAxis, 'data', [])
+        this.$set(this.courseSpeechComparisonOptions.series[0], 'data', [])
       }
     },
     // 更新课程进度图数据
@@ -942,6 +1048,8 @@ export default {
       // 清空所有图表数据，使用Vue.set确保响应式更新
       this.$set(this.studentActionOptions.series[0], 'data', [])
       this.$set(this.studentEmotionOptions.series[0], 'data', [])
+      this.$set(this.courseSpeechComparisonOptions.xAxis, 'data', [])
+      this.$set(this.courseSpeechComparisonOptions.series[0], 'data', [])
       
       // 清空学员班级详情数据
       this.$set(this, 'studentClassDetail', {})
