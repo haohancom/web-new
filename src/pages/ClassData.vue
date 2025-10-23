@@ -69,7 +69,7 @@
     <div class="class-info-section" v-if="course">
       <div class="class-info-content">
         <div class="class-overview-title">
-          <span class="title-text">班级概况</span>
+          <span class="title-text"> 学员概况</span>
         </div>
         <span v-if="classList.length > 0">
           当前时间段内，<span class="highlight">{{ course }}</span>班次共<span class="highlight">{{ classList.length }}</span>个小班参与，
@@ -432,7 +432,7 @@ export default {
         tooltip: {
           trigger: 'item',
           formatter: function (params) {
-            return `课程：${params.name}<br/> RT: ${params.value[0].toFixed(2)}<br/>CH: ${params.value[1].toFixed(2)}`;
+            return `班级：${params.name}<br/> RT: ${params.value[0].toFixed(2)}<br/>CH: ${params.value[1].toFixed(2)}`;
           },
         },
         yAxis: {
