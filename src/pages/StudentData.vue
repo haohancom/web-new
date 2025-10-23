@@ -353,6 +353,8 @@ export default {
         this.studentClass = null
         this.studentClassList = []
         this.studentClassMapping = {}
+        // 清空图表数据
+        this.clearChartData()
       } else if (this.startDate && this.endDate) {
         // 如果两个日期都存在，重新获取学员班级列表
         this.fetchStudentClassList()
@@ -367,6 +369,8 @@ export default {
         this.studentClass = null
         this.studentClassList = []
         this.studentClassMapping = {}
+        // 清空图表数据
+        this.clearChartData()
       }
     },
     onStudentClassChange(value) {
@@ -431,6 +435,13 @@ export default {
             this.studentClass = this.studentClassList[0]
             // 自动获取选中班级的数据
             await this.fetchStudentData()
+          } else if (this.studentClass && this.studentClassList.includes(this.studentClass)) {
+            // 如果当前选中的班级在新列表中，重新获取数据
+            await this.fetchStudentData()
+          } else if (this.studentClass && !this.studentClassList.includes(this.studentClass)) {
+            // 如果当前选中的班级不在新列表中，清空选择并清空数据
+            this.studentClass = null
+            this.clearChartData()
           }
         } else {
           this.studentClassList = []
@@ -469,8 +480,9 @@ export default {
           }
         })
         
-        // 更新学员班级详情数据
-        this.studentClassDetail = response || {}
+        // 更新学员班级详情数据，使用Vue.set确保响应式更新
+        this.$set(this, 'studentClassDetail', response || {})
+        console.log('更新学员班级详情数据:', this.studentClassDetail)
         
         // 获取学员班级抬头率数据
         await this.fetchStudentClassHeadupRate()
@@ -495,7 +507,7 @@ export default {
         
       } catch (error) {
         console.error('获取学员数据出错:', error)
-        this.studentClassDetail = {}
+        this.$set(this, 'studentClassDetail', {})
       }
     },
     // 获取学员班级抬头率数据
@@ -524,12 +536,13 @@ export default {
           }
         })
         
-        // 更新学员班级抬头率数据
-        this.headupRate = response || 0
+        // 更新学员班级抬头率数据，使用Vue.set确保响应式更新
+        this.$set(this, 'headupRate', response || 0)
+        console.log('更新抬头率数据:', this.headupRate)
         
       } catch (error) {
         console.error('获取学员班级抬头率出错:', error)
-        this.headupRate = 0
+        this.$set(this, 'headupRate', 0)
       }
     },
     // 获取学员班级参与课程数数据
@@ -558,12 +571,13 @@ export default {
           }
         })
         
-        // 更新参与课程数数据
-        this.courseCount = response || 0
+        // 更新参与课程数数据，使用Vue.set确保响应式更新
+        this.$set(this, 'courseCount', response || 0)
+        console.log('更新课程数数据:', this.courseCount)
         
       } catch (error) {
         console.error('获取学员班级参与课程数出错:', error)
-        this.courseCount = 0
+        this.$set(this, 'courseCount', 0)
       }
     },
     // 获取学员班级学员动作分布数据
@@ -595,20 +609,18 @@ export default {
         // 处理响应数据，过滤掉null值的动作
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新图表数据
-        this.studentActionOptions.series[0].data = filteredData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.studentActionOptions.series[0], 'data', filteredData)
+        console.log('更新动作分布图表数据:', filteredData)
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('studentClassActionChart'))
-          if (chart) {
-            chart.setOption(this.studentActionOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取学员班级学员动作分布数据出错:', error)
-        this.studentActionOptions.series[0].data = []
+        this.$set(this.studentActionOptions.series[0], 'data', [])
       }
     },
     // 获取学员班级学员情绪分布数据
@@ -640,37 +652,42 @@ export default {
         // 处理响应数据，过滤掉null值的情绪
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新图表数据
-        this.studentEmotionOptions.series[0].data = filteredData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.studentEmotionOptions.series[0], 'data', filteredData)
+        console.log('更新情绪分布图表数据:', filteredData)
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('studentClassEmotionChart'))
-          if (chart) {
-            chart.setOption(this.studentEmotionOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取学员班级学员情绪分布数据出错:', error)
-        this.studentEmotionOptions.series[0].data = []
+        this.$set(this.studentEmotionOptions.series[0], 'data', [])
       }
     },
     // 更新课程进度图数据
     updateCourseProgressCharts() {
       try {
-        // 获取参与度、活跃度、兴奋度数据
-        this.engagementRate = this.studentClassDetail && this.studentClassDetail.studentEngagementRate !== null && this.studentClassDetail.studentEngagementRate !== undefined
+        // 获取参与度、活跃度、兴奋度数据，使用Vue.set确保响应式更新
+        const engagementRate = this.studentClassDetail && this.studentClassDetail.studentEngagementRate !== null && this.studentClassDetail.studentEngagementRate !== undefined
           ? Number(this.studentClassDetail.studentEngagementRate)
           : 0
         
-        this.activationRate = this.studentClassDetail && this.studentClassDetail.studentActivationRate !== null && this.studentClassDetail.studentActivationRate !== undefined
+        const activationRate = this.studentClassDetail && this.studentClassDetail.studentActivationRate !== null && this.studentClassDetail.studentActivationRate !== undefined
           ? Number(this.studentClassDetail.studentActivationRate)
           : 0
         
-        this.excitementRate = this.studentClassDetail && this.studentClassDetail.studentExcitementRate !== null && this.studentClassDetail.studentExcitementRate !== undefined
+        const excitementRate = this.studentClassDetail && this.studentClassDetail.studentExcitementRate !== null && this.studentClassDetail.studentExcitementRate !== undefined
           ? Number(this.studentClassDetail.studentExcitementRate)
           : 0
+        
+        // 使用Vue.set更新数据
+        this.$set(this, 'engagementRate', engagementRate)
+        this.$set(this, 'activationRate', activationRate)
+        this.$set(this, 'excitementRate', excitementRate)
+        
+        console.log('更新水波图数据:', { engagementRate, activationRate, excitementRate })
         
         // 绘制水波图
         this.$nextTick(() => {
@@ -918,6 +935,29 @@ export default {
       } catch (error) {
         console.error('获取兴奋度数据失败:', error)
       }
+    },
+    
+    // 清空图表数据的方法
+    clearChartData() {
+      // 清空所有图表数据，使用Vue.set确保响应式更新
+      this.$set(this.studentActionOptions.series[0], 'data', [])
+      this.$set(this.studentEmotionOptions.series[0], 'data', [])
+      
+      // 清空学员班级详情数据
+      this.$set(this, 'studentClassDetail', {})
+      this.$set(this, 'headupRate', 0)
+      this.$set(this, 'courseCount', 0)
+      this.$set(this, 'engagementRate', 0)
+      this.$set(this, 'activationRate', 0)
+      this.$set(this, 'excitementRate', 0)
+      
+      // 清空提示信息
+      this.$set(this, 'participationTooltip', '')
+      this.$set(this, 'participationTooltipHtml', '')
+      this.$set(this, 'excitementTooltip', '')
+      this.$set(this, 'excitementTooltipHtml', '')
+      
+      console.log('清空所有图表数据')
     }
   }
 }

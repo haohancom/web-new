@@ -831,6 +831,28 @@ export default {
         
         // 获取对比表格数据（只在时间改变时调用）
         await this.fetchComparisonData()
+        
+        // 检查当前选中的课程是否需要重新获取数据
+        if (this.course && this.courseList.includes(this.course)) {
+          // 如果当前选中的课程在新列表中，重新获取数据
+          await this.fetchClassData()
+        } else if (this.course && !this.courseList.includes(this.course)) {
+          // 如果当前选中的课程不在新列表中，清空选择并清空数据
+          this.course = null
+          this.headupRate = 0
+          this.classList = []
+          this.studentActionOptions.series[0].data = []
+          this.studentEmotionOptions.series[0].data = []
+          this.studentTypeOptions.xAxis.data = []
+          this.studentTypeOptions.series[0].data = []
+          this.teacherBehaviorOptions.series[0].data = []
+          this.classroomTypeOptions.series[0].data = []
+          // 清空提示信息
+          this.participationTooltip = ''
+          this.participationTooltipHtml = ''
+          this.excitementTooltip = ''
+          this.excitementTooltipHtml = ''
+        }
       } catch (error) {
         console.error('获取课程列表出错:', error)
         this.courseList = []
@@ -928,8 +950,9 @@ export default {
           }
         })
         
-        // 更新班级数据
-        this.classData = response || {}
+        // 更新班级数据，使用Vue.set确保响应式更新
+        this.$set(this, 'classData', response || {})
+        console.log('更新班级数据:', this.classData)
         
         // 获取教员人数和学员人数
         await this.fetchClassroomAttendance()
@@ -963,7 +986,7 @@ export default {
         
       } catch (error) {
         console.error('获取班级数据出错:', error)
-        this.classData = {}
+        this.$set(this, 'classData', {})
       }
     },
     // 获取教员人数和学员人数
@@ -993,14 +1016,15 @@ export default {
         })
         
         if (response && response.code === 200 && response.result) {
-          this.teacherCount = response.result.teaCount || 0
-          this.studentCount = response.result.stuCount || 0
+          this.$set(this, 'teacherCount', response.result.teaCount || 0)
+          this.$set(this, 'studentCount', response.result.stuCount || 0)
+          console.log('更新教员/学员人数:', { teacherCount: this.teacherCount, studentCount: this.studentCount })
         }
         
       } catch (error) {
         console.error('获取教员/学员人数出错:', error)
-        this.teacherCount = 0
-        this.studentCount = 0
+        this.$set(this, 'teacherCount', 0)
+        this.$set(this, 'studentCount', 0)
       }
     },
     // 获取学员抬头率
@@ -1029,12 +1053,13 @@ export default {
           }
         })
         
-        // 更新学员抬头率数据
-        this.headupRate = response || 0
+        // 更新学员抬头率数据，使用Vue.set确保响应式更新
+        this.$set(this, 'headupRate', response || 0)
+        console.log('更新抬头率数据:', this.headupRate)
         
       } catch (error) {
         console.error('获取学员抬头率出错:', error)
-        this.headupRate = 0
+        this.$set(this, 'headupRate', 0)
       }
     },
     // 获取班级列表
@@ -1063,12 +1088,13 @@ export default {
           }
         })
         
-        // 更新班级列表数据
-        this.classList = Array.isArray(response) ? response : []
+        // 更新班级列表数据，使用Vue.set确保响应式更新
+        this.$set(this, 'classList', Array.isArray(response) ? response : [])
+        console.log('更新班级列表数据:', this.classList)
         
       } catch (error) {
         console.error('获取班级列表出错:', error)
-        this.classList = []
+        this.$set(this, 'classList', [])
       }
     },
     // 获取学员动作分布数据
@@ -1100,20 +1126,18 @@ export default {
         // 处理响应数据，过滤掉null值的动作
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新图表数据
-        this.studentActionOptions.series[0].data = filteredData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.studentActionOptions.series[0], 'data', filteredData)
+        console.log('更新动作分布图表数据:', filteredData)
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('studentActionChart'))
-          if (chart) {
-            chart.setOption(this.studentActionOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取学员动作分布数据出错:', error)
-        this.studentActionOptions.series[0].data = []
+        this.$set(this.studentActionOptions.series[0], 'data', [])
       }
     },
     // 获取学员情绪分布数据
@@ -1145,20 +1169,18 @@ export default {
         // 处理响应数据，过滤掉null值的情绪
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新图表数据
-        this.studentEmotionOptions.series[0].data = filteredData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.studentEmotionOptions.series[0], 'data', filteredData)
+        console.log('更新情绪分布图表数据:', filteredData)
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('studentEmotionChart'))
-          if (chart) {
-            chart.setOption(this.studentEmotionOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取学员情绪分布数据出错:', error)
-        this.studentEmotionOptions.series[0].data = []
+        this.$set(this.studentEmotionOptions.series[0], 'data', [])
       }
     },
     // 获取学员类型分析数据
@@ -1194,22 +1216,20 @@ export default {
         const xData = filteredData.map(item => item.name)
         const yData = filteredData.map(item => Number(item.value))
         
-        // 更新图表数据
-        this.studentTypeOptions.xAxis.data = xData
-        this.studentTypeOptions.series[0].data = yData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.studentTypeOptions.xAxis, 'data', xData)
+        this.$set(this.studentTypeOptions.series[0], 'data', yData)
+        console.log('更新学员类型分析图表数据:', { xData, yData })
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('studentTypeChart'))
-          if (chart) {
-            chart.setOption(this.studentTypeOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取学员类型分析数据出错:', error)
-        this.studentTypeOptions.xAxis.data = []
-        this.studentTypeOptions.series[0].data = []
+        this.$set(this.studentTypeOptions.xAxis, 'data', [])
+        this.$set(this.studentTypeOptions.series[0], 'data', [])
       }
     },
     // 获取教员行为分布数据
@@ -1241,20 +1261,18 @@ export default {
         // 处理响应数据，过滤掉null值的行为
         const filteredData = (response || []).filter(item => item.name !== null)
         
-        // 更新图表数据
-        this.teacherBehaviorOptions.series[0].data = filteredData
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.teacherBehaviorOptions.series[0], 'data', filteredData)
+        console.log('更新教员行为分布图表数据:', filteredData)
         
-        // 手动更新图表
+        // 强制重新渲染图表
         this.$nextTick(() => {
-          const chart = echarts.init(document.getElementById('teacherBehaviorChart'))
-          if (chart) {
-            chart.setOption(this.teacherBehaviorOptions)
-          }
+          this.$forceUpdate()
         })
         
       } catch (error) {
         console.error('获取教员行为分布数据出错:', error)
-        this.teacherBehaviorOptions.series[0].data = []
+        this.$set(this.teacherBehaviorOptions.series[0], 'data', [])
       }
     },
     // 计算课堂类型分布
@@ -1262,15 +1280,13 @@ export default {
       // 使用通用函数计算分布
       const pieData = calculateClassroomTypeDistribution(dataPoints)
       
-      // 更新饼状图数据
-      this.classroomTypePieOptions.series[0].data = pieData
+      // 更新饼状图数据，使用Vue.set确保响应式更新
+      this.$set(this.classroomTypePieOptions.series[0], 'data', pieData)
+      console.log('更新课堂类型饼状图数据:', pieData)
       
-      // 手动更新饼状图
+      // 强制重新渲染图表
       this.$nextTick(() => {
-        const pieChart = echarts.init(document.getElementById('classroomTypePieChart'))
-        if (pieChart) {
-          pieChart.setOption(this.classroomTypePieOptions)
-        }
+        this.$forceUpdate()
       })
     },
     // 获取课堂类型数据
@@ -1306,38 +1322,29 @@ export default {
             value: [response.rt, response.ch] // [RT值, CH值]
           }]
           
-          // 更新图表数据
-          this.classroomTypeOptions.series[0].data = scatterData
-          
-          // 计算课堂类型占比
-          this.calculateClassroomTypeDistribution([{ rt: response.rt, ch: response.ch }])
-          
-          // 手动更新图表
-          this.$nextTick(() => {
-            const chart = echarts.init(document.getElementById('classroomTypeChart'))
-            if (chart) {
-              chart.setOption(this.classroomTypeOptions)
-            }
-          })
+        // 更新图表数据，使用Vue.set确保响应式更新
+        this.$set(this.classroomTypeOptions.series[0], 'data', scatterData)
+        console.log('更新课堂类型图表数据:', scatterData)
+        
+        // 计算课堂类型占比
+        this.calculateClassroomTypeDistribution([{ rt: response.rt, ch: response.ch }])
+        
+        // 强制重新渲染图表
+        this.$nextTick(() => {
+          this.$forceUpdate()
+        })
         } else {
           // 如果没有数据，显示空图表
-          this.classroomTypeOptions.series[0].data = []
-          this.classroomTypePieOptions.series[0].data = []
+          this.$set(this.classroomTypeOptions.series[0], 'data', [])
+          this.$set(this.classroomTypePieOptions.series[0], 'data', [])
           this.$nextTick(() => {
-            const chart = echarts.init(document.getElementById('classroomTypeChart'))
-            const pieChart = echarts.init(document.getElementById('classroomTypePieChart'))
-            if (chart) {
-              chart.setOption(this.classroomTypeOptions)
-            }
-            if (pieChart) {
-              pieChart.setOption(this.classroomTypePieOptions)
-            }
+            this.$forceUpdate()
           })
         }
         
       } catch (error) {
         console.error('获取课堂类型数据出错:', error)
-        this.classroomTypeOptions.series[0].data = []
+        this.$set(this.classroomTypeOptions.series[0], 'data', [])
       }
     },
     async loadClassData() {
