@@ -37,7 +37,7 @@
           />
         </div>
         <div class="filter-item">
-          <label class="filter-label">课程：</label>
+          <label class="filter-label">课程-班级：</label>
           <a-select
             v-model:value="course"
             placeholder="请先选择日期"
